@@ -29,6 +29,7 @@ build_win64()
           -DJAVA_HOME="$WINEPREFIX/drive_c/Program Files/Java/jdk-13.0.2" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
           -DJAVA_COMPATIBILITY=ON \
+	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
     ../scripts/pgo-compile.sh
     ninja
