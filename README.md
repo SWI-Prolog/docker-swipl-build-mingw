@@ -6,27 +6,35 @@ cross-compilation toolchain from Linux.  Usage:
   - Edit `Makefile` to make $SWIPLSRC point at a checked out source tree
     normally obtained using
 
+```
 	git clone https://github.com/SWI-Prolog/swipl-devel.git
 	git submodule update --init
+```
 
   - Create the Docker image using the command below.  This takes quite
     long.  The image is pretty big (6.71Gb)
 
+```
 	make image
+```
 
   - Run the image using the command below. This create an X11 _headless_
     server for running Wine.  If debugging is required it may be wise
     to run `make run11` which sets up X11 forwarding, makeing Wine
     windows appear on your X11 deskop (requires a Unix host).
 
+```
 	make run
+```
 
   - The commands below create a fresh build.win32 (build.win64)
     directory, configures, builds and packages SWI-Prolog for
     Windows 32/64
 
+```
 	build_win32
 	build_win64
+```
 
   - For updating/debugging a build, go into one of the above
     build directories and build using `ninja`.  Note that the
@@ -35,11 +43,15 @@ cross-compilation toolchain from Linux.  Usage:
     PGO compilation using this command, after which you can
     rebuild using `ninja`
 
+```
 	../scripts/pgo-compile.sh --off
+```
 
     or build using PGO optimization using
 
+```
 	../scripts/pgo-compile.sh
+```
 
 ## Issues
 
