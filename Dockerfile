@@ -123,20 +123,27 @@ ENV OPENJDK openjdk-13.0.2_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/${OPENJDK} > ${OPENJDK}
 COPY deps/Win64OpenSSL_Light-1_1_1g.exe /Win64OpenSSL.exe
 
-RUN groupadd -g 1000 -o swipl && \
-    useradd  -u 1000 -g 1000 -o swipl && \
+ARG GID=1000
+ARG UID=1000
+
+RUN groupadd -g $GID -o swipl && \
+    useradd  -u $UID -g $GID -o swipl && \
     mkdir -p $WINEPREFIX && \
-    chown swipl.swipl $WINEPREFIX && \
-    export DISPLAY=:32 && \
+    chown swipl.swipl $WINEPREFIX
+
+USER swipl:swipl
+
+RUN export DISPLAY=:32 && \
     (Xvfb $DISPLAY > /dev/null 2>&1 &) && \
-    sudo -u swipl mkdir -p $WINEPREFIX/drive_c/tmp && \
-    sudo -u swipl WINEDEBUG=-all WINEPREFIX=${WINEPREFIX} wine /Win64OpenSSL.exe /SILENT && \
-    sudo -u swipl mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
+    mkdir -p $WINEPREFIX/drive_c/tmp && \
+    WINEDEBUG=-all WINEPREFIX=${WINEPREFIX} wine /Win64OpenSSL.exe /SILENT && \
+    mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
     cd "${WINEPREFIX}/drive_c/Program Files/Java" && \
-    sudo -u swipl unzip -qq /${OPENJDK}
+    unzip -qq /${OPENJDK}
 RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
 COPY entry.sh entry.sh
-COPY bash-init.sh bash-init.sh
+COPY functions.sh functions.sh
+
 ENV LANG C.UTF-8
 ENTRYPOINT ["/entry.sh"]

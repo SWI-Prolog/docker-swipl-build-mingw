@@ -1,4 +1,6 @@
-SWIPLSRC=/home/janw/src/swipl-devel
+SWIPLSRC=$(HOME)/src/swipl-devel
+UID=$(shell id -u)
+GID=$(shell id -g)
 
 MOUNT=	  -v $(SWIPLSRC):/home/swipl/src/swipl-devel
 MOUNTX11= -v /tmp/.X11-unix:/tmp/.X11-unix
@@ -13,6 +15,8 @@ all::
 	@echo "  win64     Build and package 64-bit version"
 	@echo "  win       Build and package both 32-bit and 64-bit version"
 	@echo
+
+BUILDARGS=--build-arg UID=$(UID) GID=$(GID)
 
 image:	Dockerfile
 	docker build -t swipl-mingw . 2>&1 | tee mkimg.log

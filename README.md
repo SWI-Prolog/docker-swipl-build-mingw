@@ -11,6 +11,11 @@ cross-compilation toolchain from Linux.  Usage:
 	git submodule update --init
 ```
 
+  - By default, the Docker image creates a user `swipl` with the UID and
+    GID of the user that creates the image.  This user/group is used for
+    the build process.  Edit GID and UID in Makefile if you want a
+    different scenario.
+
   - Create the Docker image using the command below.  This takes quite
     long.  The image is pretty big (6.71Gb)
 
