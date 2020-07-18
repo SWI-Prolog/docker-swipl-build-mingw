@@ -20,7 +20,7 @@ all::
 BUILDARGS=--build-arg UID=$(UID) GID=$(GID)
 
 image:	Dockerfile
-	docker build -t $(IMG) . 2>&1 | tee mkimg.log
+	docker build -t $(IMG) $(BUILDARGS) . 2>&1 | tee mkimg.log
 
 run:
 	docker run -it --rm $(MOUNT) $(IMG)
