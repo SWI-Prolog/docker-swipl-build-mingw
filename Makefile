@@ -17,10 +17,10 @@ all::
 	@echo "  win       Build and package both 32-bit and 64-bit version"
 	@echo
 
-BUILDARGS=--build-arg UID=$(UID) GID=$(GID)
+BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
 
 image:	Dockerfile
-	docker build -t $(IMG) $(BUILDARGS) . 2>&1 | tee mkimg.log
+	docker build $(BUILDARGS) -t $(IMG) . 2>&1 | tee mkimg.log
 
 run:
 	docker run -it --rm $(MOUNT) $(IMG)
