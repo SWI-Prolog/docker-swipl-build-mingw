@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd /home/swipl/src/swipl-devel
+export SWIPL_SOURCE_DIR=/home/swipl/src/swipl-devel
+cd $SWIPL_SOURCE_DIR
 
 if [ -z "$DISPLAY" ]; then
   export DISPLAY=:32
@@ -11,7 +12,8 @@ export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 export MINGW32_ROOT=/usr/i686-w64-mingw32/sys-root/mingw
 export WINEPREFIX=/wine
 export WINEDEBUG=-all
-export JAVA_HOME=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"* | sed 's/.*drive_c/c:/')
+export JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"* | sed 's/.*drive_c/c:/')
+export JAVA_HOME32=$(echo "$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk"* | sed 's/.*drive_c/c:/')
 
 if [ ! -f VERSION ]; then
   echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
@@ -25,6 +27,9 @@ if [ -z "$*" ]; then
   echo ""
   echo "  build_win32     -- build 32-bit version in build.win32"
   echo "  build_win64     -- build 64-bit version in build.win64"
+  echo ""
+  echo "  win32		  -- Setup for win32 and enter build.win32"
+  echo "  win64           -- Setup for win64 and enter build.win64"
   echo ""
 
   /bin/bash --rcfile /functions.sh
