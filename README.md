@@ -25,7 +25,7 @@ cross-compilation toolchain from Linux.  Usage:
 
   - Run the image using the command below. This create an X11 _headless_
     server for running Wine.  If debugging is required it may be wise
-    to run `make run11` which sets up X11 forwarding, makeing Wine
+    to run `make run11` which sets up X11 forwarding, making Wine
     windows appear on your X11 deskop (requires a Unix host).
 
 ```
@@ -60,9 +60,6 @@ cross-compilation toolchain from Linux.  Usage:
 
 ## Issues
 
-  - The 32-bit version does not provide JPL (the Java
-    interface) because we cannot legally include Oracle Java in
-    the docker and OpenJDK has no 32-bit version.
   - The SSL test suite is currently not built.  There is an
     issue running `openssl.exe` in `wine` in a Docker container
     with the random seeding.
