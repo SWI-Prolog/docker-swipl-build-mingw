@@ -16,14 +16,13 @@ build_win64()
   rm -rf $dir
   mkdir $dir
   ( cd $dir
-    cmake -DCMAKE_BUILD_TYPE=Release \
+    cmake -DCMAKE_BUILD_TYPE=PGO \
 	  -DSKIP_SSL_TESTS=ON \
           -DJAVA_HOME="$WINEPREFIX/drive_c/Program Files/Java/jdk-13.0.2" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ../scripts/pgo-compile.sh
     ninja
     cpack
   )
@@ -38,14 +37,13 @@ build_win32()
   rm -rf $dir
   mkdir $dir
   ( cd $dir
-    cmake -DCMAKE_BUILD_TYPE=Release \
+    cmake -DCMAKE_BUILD_TYPE=PGO \
 	  -DSKIP_SSL_TESTS=ON \
 	  -DJAVA_HOME="$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk-14.0.2+12" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win32.cmake \
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ../scripts/pgo-compile.sh
     ninja
     cpack
   )
