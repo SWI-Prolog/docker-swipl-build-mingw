@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM fedora:32
 LABEL maintainer "Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf \
