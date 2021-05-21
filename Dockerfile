@@ -83,7 +83,7 @@ RUN install_uuid() { \
       tar zxf uuid-$UUID_VERSION.tar.gz; \
       ( cd uuid-$UUID_VERSION; \
         sed -i -e "s/-m 755 uuid /-m 755 uuid.exe /" Makefile.in; \
-        ./configure --host=$CROSS --prefix=$MINGW_ROOT; \
+        ac_cv_va_copy=1 ./configure --host=$CROSS --prefix=$MINGW_ROOT; \
         make; \
         make install; \
       ); \
