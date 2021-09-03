@@ -1,5 +1,12 @@
 # Shell functions for common tasks
 
+# Running to many jobs concurrently under  wine   that  access  a lot of
+# files causes wineserver to generate  timeouts   which  shows  as files
+# claimed missing while they are not.
+
+jobs=$(($(nproc)/2))
+nopts="-j $jobs"
+
 must_be_in_source_root()
 { if [ ! -f VERSION ]; then
     echo "Must start in source root dir"
@@ -23,7 +30,7 @@ build_win64()
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ninja
+    ninja $nopts
     cpack
   )
 }
@@ -44,7 +51,7 @@ build_win32()
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ninja
+    ninja $nopts
     cpack
   )
 }
