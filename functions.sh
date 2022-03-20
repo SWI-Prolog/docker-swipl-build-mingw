@@ -30,7 +30,8 @@ build_win64()
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ninja $nopts
+    timeout -k 2m 1h ninja $nopts
+    timeout -k 2m 1h ninja $nopts
     cpack
   )
 }
@@ -51,7 +52,8 @@ build_win32()
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
           -G Ninja ..
-    ninja $nopts
+    timeout -k 2m 1h ninja $nopts
+    timeout -k 2m 1h ninja $nopts
     cpack
   )
 }
