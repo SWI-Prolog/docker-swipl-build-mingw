@@ -7,10 +7,10 @@ RUN dnf -y update && \
 		   wine mingw32-nsis \
                    mingw64-gcc mingw64-zlib mingw64-gcc-c++ \
 		   mingw64-zlib mingw64-gmp mingw64-openssl mingw64-pcre \
-		   mingw64-libffi mingw64-libjpeg-turbo \
+		   mingw64-pcre2 mingw64-libffi mingw64-libjpeg-turbo \
                    mingw32-gcc mingw32-zlib mingw32-gcc-c++ \
 		   mingw32-zlib mingw32-gmp mingw32-openssl mingw32-pcre \
-		   mingw32-libffi mingw32-libjpeg-turbo \
+		   mingw32-pcre2 mingw32-libffi mingw32-libjpeg-turbo \
 		   xorg-x11-server-Xvfb \
 		   java-11-openjdk-devel junit
 
