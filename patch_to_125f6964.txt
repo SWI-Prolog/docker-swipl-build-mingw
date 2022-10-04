@@ -1,0 +1,240 @@
+From b56e0f46892f4108ec9ef883f7e598eed25eb739 Mon Sep 17 00:00:00 2001
+From: Johnny Jazeix <jazeix@gmail.com>
+Date: Sat, 29 Jan 2022 18:02:46 +0100
+Subject: CPack/NSIS: Fix description not displayed for components
+
+Fixes: #23151
+---
+ Modules/Internal/CPack/NSIS.template.in | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/Modules/Internal/CPack/NSIS.template.in b/Modules/Internal/CPack/NSIS.template.in
+index 8a0c9726c9..e3abf22f37 100644
+--- a/Modules/Internal/CPack/NSIS.template.in
++++ b/Modules/Internal/CPack/NSIS.template.in
+@@ -531,7 +531,6 @@ FunctionEnd
+ @CPACK_NSIS_INSTALLER_ICON_CODE@
+ @CPACK_NSIS_INSTALLER_MUI_WELCOMEFINISH_CODE@
+ @CPACK_NSIS_INSTALLER_MUI_UNWELCOMEFINISH_CODE@
+-@CPACK_NSIS_INSTALLER_MUI_COMPONENTS_DESC@
+ @CPACK_NSIS_INSTALLER_MUI_FINISHPAGE_RUN_CODE@
+ 
+ ;--------------------------------
+@@ -648,7 +647,7 @@ FunctionEnd
+ ;--------------------------------
+ ; Component sections
+ @CPACK_NSIS_COMPONENT_SECTIONS@
+-
++@CPACK_NSIS_INSTALLER_MUI_COMPONENTS_DESC@
+ ;--------------------------------
+ ;Installer Sections
+ 
+-- 
+2.30.2
+
+
+From b795c96727c28982f88fcaf7127bd72067edcf4a Mon Sep 17 00:00:00 2001
+From: Marc Jeanmougin <marc@jeanmougin.fr>
+Date: Mon, 21 Mar 2022 12:25:10 -0400
+Subject: CPack/NSIS: Fix uninstall command when run from installer
+
+The quoting introduced by commit eb3b3bacdc (CPack/NSIS: Fix uninstall
+on Windows using "Apps & Features", 2021-09-13, v3.22.0-rc1~136^2)
+created two errors in the uninstaller call: double quoting of the
+uninstaller executable, and quotes added to the `_?=` argument which
+does not support them.  Simplify the command.
+---
+ Modules/Internal/CPack/NSIS.template.in | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/Modules/Internal/CPack/NSIS.template.in b/Modules/Internal/CPack/NSIS.template.in
+index 8a0c9726c9..18f1ee8d68 100644
+--- a/Modules/Internal/CPack/NSIS.template.in
++++ b/Modules/Internal/CPack/NSIS.template.in
+@@ -932,9 +932,7 @@ Function .onInit
+ ;Run the uninstaller
+ uninst:
+   ClearErrors
+-  StrLen $2 "\@CPACK_NSIS_UNINSTALL_NAME@.exe"
+-  StrCpy $3 $0 -$2 # remove "\@CPACK_NSIS_UNINSTALL_NAME@.exe" from UninstallString to get path
+-  ExecWait '"$0" /S _?=$3' ;Do not copy the uninstaller to a temp file
++  ExecWait '$0 /S'
+ 
+   IfErrors uninst_failed inst
+ uninst_failed:
+-- 
+2.30.2
+
+
+From 5d2ceaada8b84990d828e3c98ea4f6418cac9893 Mon Sep 17 00:00:00 2001
+From: Marc Jeanmougin <marc@jeanmougin.fr>
+Date: Mon, 21 Mar 2022 19:22:34 +0100
+Subject: CPack/NSIS: Add support for unquoted (legacy) uninstaller strings
+
+---
+ Modules/Internal/CPack/NSIS.template.in | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Modules/Internal/CPack/NSIS.template.in b/Modules/Internal/CPack/NSIS.template.in
+index 18f1ee8d68..f16eaf6597 100644
+--- a/Modules/Internal/CPack/NSIS.template.in
++++ b/Modules/Internal/CPack/NSIS.template.in
+@@ -932,7 +932,11 @@ Function .onInit
+ ;Run the uninstaller
+ uninst:
+   ClearErrors
++  StrCpy $2 $0 1
++  StrCmp '"' $2 0 +3 ; checks if string is quoted (CPack before v3.20.6 did not quote it)
+   ExecWait '$0 /S'
++  Goto +2
++  ExecWait '"$0" /S'
+ 
+   IfErrors uninst_failed inst
+ uninst_failed:
+-- 
+2.30.2
+
+
+From 125f6964ba40905c452e92810a705507a0958ade Mon Sep 17 00:00:00 2001
+From: Sadie Powell <sadie@witchery.services>
+Date: Sun, 1 May 2022 09:44:07 +0100
+Subject: CPack/NSIS: Fix several typos in the NSIS template
+
+---
+ Modules/Internal/CPack/NSIS.template.in | 44 ++++++++++++-------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/Modules/Internal/CPack/NSIS.template.in b/Modules/Internal/CPack/NSIS.template.in
+index 23c45c73a8..42a44d96c6 100644
+--- a/Modules/Internal/CPack/NSIS.template.in
++++ b/Modules/Internal/CPack/NSIS.template.in
+@@ -48,7 +48,7 @@
+ 
+ ;--- Component support macros: ---
+ ; The code for the add/remove functionality is from:
+-;   http://nsis.sourceforge.net/Add/Remove_Functionality
++;   https://nsis.sourceforge.io/Add/Remove_Functionality
+ ; It has been modified slightly and extended to provide
+ ; inter-component dependencies.
+ Var AR_SecFlags
+@@ -383,7 +383,7 @@ Function un.RemoveFromPath
+ FunctionEnd
+ 
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+-; Uninstall sutff
++; Uninstall stuff
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+ ###########################################
+@@ -487,15 +487,15 @@ Done:
+ 	Exch $R1
+ FunctionEnd
+ 
+-Function ConditionalAddToRegisty
++Function ConditionalAddToRegistry
+   Pop $0
+   Pop $1
+-  StrCmp "$0" "" ConditionalAddToRegisty_EmptyString
++  StrCmp "$0" "" ConditionalAddToRegistry_EmptyString
+     WriteRegStr SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\@CPACK_PACKAGE_INSTALL_REGISTRY_KEY@" \
+     "$1" "$0"
+     ;MessageBox MB_OK "Set Registry: '$1' to '$0'"
+     DetailPrint "Set install registry entry: '$1' to '$0'"
+-  ConditionalAddToRegisty_EmptyString:
++  ConditionalAddToRegistry_EmptyString:
+ FunctionEnd
+ 
+ ;--------------------------------
+@@ -665,44 +665,44 @@ Section "-Core installation"
+   WriteUninstaller "$INSTDIR\@CPACK_NSIS_UNINSTALL_NAME@.exe"
+   Push "DisplayName"
+   Push "@CPACK_NSIS_DISPLAY_NAME@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "DisplayVersion"
+   Push "@CPACK_PACKAGE_VERSION@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "Publisher"
+   Push "@CPACK_PACKAGE_VENDOR@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "UninstallString"
+   Push "$\"$INSTDIR\@CPACK_NSIS_UNINSTALL_NAME@.exe$\""
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "NoRepair"
+   Push "1"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+ 
+   !ifdef CPACK_NSIS_ADD_REMOVE
+   ;Create add/remove functionality
+   Push "ModifyPath"
+   Push "$INSTDIR\AddRemove.exe"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   !else
+   Push "NoModify"
+   Push "1"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   !endif
+ 
+   ; Optional registration
+   Push "DisplayIcon"
+   Push "$INSTDIR\@CPACK_NSIS_INSTALLED_ICON_NAME@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "HelpLink"
+   Push "@CPACK_NSIS_HELP_LINK@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "URLInfoAbout"
+   Push "@CPACK_NSIS_URL_INFO_ABOUT@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "Contact"
+   Push "@CPACK_NSIS_CONTACT@"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   !insertmacro MUI_INSTALLOPTIONS_READ $INSTALL_DESKTOP "NSIS.InstallOptions.ini" "Field 5" "State"
+   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+ 
+@@ -720,19 +720,19 @@ Section "-Core installation"
+   ; Write special uninstall registry entries
+   Push "StartMenu"
+   Push "$STARTMENU_FOLDER"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "DoNotAddToPath"
+   Push "$DO_NOT_ADD_TO_PATH"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "AddToPathAllUsers"
+   Push "$ADD_TO_PATH_ALL_USERS"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "AddToPathCurrentUser"
+   Push "$ADD_TO_PATH_CURRENT_USER"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+   Push "InstallToDesktop"
+   Push "$INSTALL_DESKTOP"
+-  Call ConditionalAddToRegisty
++  Call ConditionalAddToRegistry
+ 
+   !insertmacro MUI_STARTMENU_WRITE_END
+ 
+@@ -880,7 +880,7 @@ Section "Uninstall"
+     StrCmp "$MUI_TEMP" "$SMPROGRAMS" startMenuDeleteLoopDone startMenuDeleteLoop
+   startMenuDeleteLoopDone:
+ 
+-  ; If the user changed the shortcut, then untinstall may not work. This should
++  ; If the user changed the shortcut, then uninstall may not work. This should
+   ; try to fix it.
+   StrCpy $MUI_TEMP "$START_MENU"
+   Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
+-- 
+2.30.2
+

@@ -153,5 +153,12 @@ COPY deps/emacs-module.h $MINGW32_ROOT/include
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
 
+# Patch uninstall issues in CMake 3.22.1.  We should remove and the
+# patch file after CMake has been updated.
+COPY patch_to_125f6964.txt patch_to_125f6964.txt
+WORKDIR /usr/share/cmake
+RUN git apply /patch_to_125f6964.txt
+WORKDIR /
+
 ENV LANG C.UTF-8
 ENTRYPOINT ["/entry.sh"]
