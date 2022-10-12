@@ -147,6 +147,9 @@ RUN export DISPLAY=:32 && \
     unzip -qq /${OPENJDK32}
 RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
+COPY deps/emacs-module.h $MINGW64_ROOT/include
+COPY deps/emacs-module.h $MINGW32_ROOT/include
+
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
 
