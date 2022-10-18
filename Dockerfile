@@ -125,6 +125,11 @@ ENV OPENJDK32 OpenJDK14U-jdk_x86-32_windows_hotspot_14.0.2_12.zip
 RUN curl -L https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/${OPENJDK32} > ${OPENJDK32}
 COPY deps/Win64OpenSSL_Light-3_0_2.exe /Win64OpenSSL.exe
 
+# Patch uninstall issues in CMake 3.22.1.  We should remove and the
+# patch file after CMake has been updated.
+COPY patch_to_125f6964.txt patch_to_125f6964.txt
+RUN (cd /usr/share/cmake && git apply /patch_to_125f6964.txt)
+
 ARG GID=1000
 ARG UID=1000
 
@@ -152,13 +157,6 @@ COPY deps/emacs-module.h $MINGW32_ROOT/include
 
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
-
-# Patch uninstall issues in CMake 3.22.1.  We should remove and the
-# patch file after CMake has been updated.
-COPY patch_to_125f6964.txt patch_to_125f6964.txt
-WORKDIR /usr/share/cmake
-RUN git apply /patch_to_125f6964.txt
-WORKDIR /
 
 ENV LANG C.UTF-8
 ENTRYPOINT ["/entry.sh"]
