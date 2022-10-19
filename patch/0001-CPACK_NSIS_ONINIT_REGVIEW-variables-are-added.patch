@@ -1,0 +1,40 @@
+From 4d3d9e69120d9cd1905eab2c8be4e6a2aa7597d8 Mon Sep 17 00:00:00 2001
+From: xpxaxsxi <pasikuuskasi@windowslive.com>
+Date: Tue, 11 Oct 2022 15:53:19 -0400
+Subject: [PATCH] CPACK_NSIS_ONINIT_REGVIEW variables are added
+
+They are added to onInit functions of both installer and unistaller
+---
+ Modules/Internal/CPack/NSIS.template.in | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/Modules/Internal/CPack/NSIS.template.in b/Modules/Internal/CPack/NSIS.template.in
+index 42a44d96c6..535dd485fb 100644
+--- a/Modules/Internal/CPack/NSIS.template.in
++++ b/Modules/Internal/CPack/NSIS.template.in
+@@ -1,4 +1,4 @@
+-﻿; CPack install script designed for a nmake build
++; CPack install script designed for a nmake build
+ 
+ ;--------------------------------
+ ; You must define these values
+@@ -759,7 +759,7 @@ FunctionEnd
+ ;--------------------------------
+ ; determine admin versus local install
+ Function un.onInit
+-
++  @CPACK_NSIS_ONINIT_REGVIEW@
+   ClearErrors
+   UserInfo::GetName
+   IfErrors noLM
+@@ -918,6 +918,7 @@ SectionEnd
+ ; "Program Files" for AllUsers, "My Documents" for JustMe...
+ 
+ Function .onInit
++  @CPACK_NSIS_ONINIT_REGVIEW@
+   StrCmp "@CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL@" "ON" 0 inst
+ 
+   ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@CPACK_PACKAGE_INSTALL_REGISTRY_KEY@" "UninstallString"
+-- 
+2.34.1
+

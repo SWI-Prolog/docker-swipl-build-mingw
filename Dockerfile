@@ -127,8 +127,8 @@ COPY deps/Win64OpenSSL_Light-3_0_2.exe /Win64OpenSSL.exe
 
 # Patch uninstall issues in CMake 3.22.1.  We should remove and the
 # patch file after CMake has been updated.
-COPY patch_to_125f6964.txt patch_to_125f6964.txt
-RUN (cd /usr/share/cmake && git apply /patch_to_125f6964.txt)
+COPY patch /patch
+RUN (cd /usr/share/cmake && git apply /patch/cmake/*)
 
 ARG GID=1000
 ARG UID=1000
