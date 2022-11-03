@@ -1,7 +1,7 @@
 SWIPLSRC=$(HOME)/src/swipl-devel
 UID=$(shell id -u)
 GID=$(shell id -g)
-IMG=swipl-mingw-f35
+IMG=swipl-mingw-f36
 IT=-it
 
 MOUNT=	  -v $(SWIPLSRC):/home/swipl/src/swipl-devel
