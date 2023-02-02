@@ -1,4 +1,4 @@
-FROM fedora:36
+FROM fedora:37
 LABEL maintainer "Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf \
@@ -124,10 +124,15 @@ ENV OPENJDK32 OpenJDK14U-jdk_x86-32_windows_hotspot_14.0.2_12.zip
 RUN curl -L https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/${OPENJDK32} > ${OPENJDK32}
 COPY deps/Win64OpenSSL_Light-3_0_7.exe /Win64OpenSSL.exe
 
-# Patch uninstall issues in CMake 3.22.1.  We should remove and the
-# patch file after CMake has been updated.
+# Patch uninstall issues in CMake 3.25.2.  We should remove and the
+# patch file after CMake has been updated.  Used to use `git apply`,
+# but that not appear the work if there is even the slightest change.
+RUN dnf -y install patch
 COPY patch /patch
-RUN (cd /usr/share/cmake && git apply /patch/cmake/*)
+RUN cd /usr/share/cmake && \
+    for f in /patch/cmake/*.patch; do \
+      patch -p1 < $f; \
+    done
 
 ARG GID=1000
 ARG UID=1000
@@ -135,7 +140,7 @@ ARG UID=1000
 RUN groupadd -g $GID -o swipl && \
     useradd  -u $UID -g $GID -o swipl && \
     mkdir -p $WINEPREFIX && \
-    chown swipl.swipl $WINEPREFIX
+    chown swipl:swipl $WINEPREFIX
 
 USER swipl:swipl
 
