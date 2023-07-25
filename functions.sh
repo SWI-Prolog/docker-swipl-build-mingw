@@ -29,6 +29,7 @@ build_win64()
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
+	  -DPython_ROOT_DIR=$WINEPREFIX/drive_c/Python \
           -G Ninja ..
     timeout -k 2m 1h ninja $nopts
     timeout -k 2m 1h ninja $nopts
