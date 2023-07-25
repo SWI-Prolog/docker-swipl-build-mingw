@@ -134,6 +134,25 @@ RUN cd /usr/share/cmake && \
       patch -p1 < $f; \
     done
 
+# From pywine.  Only do Python
+COPY pywine/wine-init.sh pywine/keys.gpg /tmp/helper/
+COPY pywine/mkuserwineprefix /opt/
+
+RUN xvfb-run sh /tmp/helper/wine-init.sh
+
+ARG PYTHON_VERSION=3.11.4
+RUN umask 0 && cd /tmp/helper && \
+  curl -LOO \
+    https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.asc} \
+  && \
+  gpgv --keyring ./keys.gpg python-${PYTHON_VERSION}-amd64.exe.asc python-${PYTHON_VERSION}-amd64.exe && \
+  xvfb-run sh -c "\
+    wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
+      Include_doc=0 InstallAllUsers=1 PrependPath=1; \
+    wineserver -w" && \
+  cd .. && rm -Rf helper && \
+  rm -rf /tmp/.X11-unix /tmp/.X32-lock
+
 ARG GID=1000
 ARG UID=1000
 
