@@ -1,0 +1,4 @@
+[submodule "pywine"]
+	path = pywine
+	url = https://github.com/webcomics/pywine
+	branch = main
