@@ -118,8 +118,8 @@ RUN install_bdb() { \
 
 ENV WINEPREFIX /wine
 ENV WINEDEBUG -all
-ENV OPENJDK64 openjdk-13.0.2_windows-x64_bin.zip
-RUN curl https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/${OPENJDK64} > ${OPENJDK64}
+ENV OPENJDK64 openjdk-21.0.1_windows-x64_bin.zip
+RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
 ENV OPENJDK32 OpenJDK14U-jdk_x86-32_windows_hotspot_14.0.2_12.zip
 RUN curl -L https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/${OPENJDK32} > ${OPENJDK32}
 COPY deps/Win64OpenSSL_Light-3_0_7.exe /Win64OpenSSL.exe
