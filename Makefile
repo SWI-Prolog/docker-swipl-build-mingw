@@ -2,6 +2,7 @@ SWIPLSRC=$(HOME)/src/swipl-devel
 UID=$(shell id -u)
 GID=$(shell id -g)
 IMG=swipl-mingw-f37
+QIMG=docker.io/library/${IMG}
 IT=-it
 
 MOUNT=	  -v $(SWIPLSRC):/home/swipl/src/swipl-devel
@@ -24,16 +25,16 @@ image:	Dockerfile
 	docker build $(BUILDARGS) -t $(IMG) . 2>&1 | tee mkimg.log
 
 run:
-	docker run $(IT) --rm $(MOUNT) $(IMG)
+	docker run $(IT) --rm $(MOUNT) $(QIMG)
 
 run11:
-	docker run $(IT) --rm $(MOUNT) $(MOUNTX11) -e DISPLAY=${DISPLAY} $(IMG)
+	docker run $(IT) --rm $(MOUNT) $(MOUNTX11) -e DISPLAY=${DISPLAY} $(QIMG)
 
 win32:
-	docker run $(IT) --rm $(MOUNT) $(IMG) --win32
+	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32
 
 win64:
-	docker run $(IT) --rm $(MOUNT) $(IMG) --win64
+	docker run $(IT) --rm $(MOUNT) $(QIMG) --win64
 
 win:
-	docker run $(IT) --rm $(MOUNT) $(IMG) --win32 x--win64
+	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32 x--win64
