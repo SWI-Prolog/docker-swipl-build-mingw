@@ -140,7 +140,7 @@ COPY pywine/mkuserwineprefix /opt/
 
 RUN xvfb-run sh /tmp/helper/wine-init.sh
 
-ARG PYTHON_VERSION=3.11.4
+ARG PYTHON_VERSION=3.12.1
 RUN umask 0 && cd /tmp/helper && \
   curl -LOO \
     https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.asc} \
