@@ -127,12 +127,12 @@ COPY deps/Win64OpenSSL_Light-3_2_0.exe /Win64OpenSSL.exe
 # Patch uninstall issues in CMake 3.25.2.  We should remove and the
 # patch file after CMake has been updated.  Used to use `git apply`,
 # but that not appear the work if there is even the slightest change.
-RUN dnf -y install patch
-COPY patch /patch
-RUN cd /usr/share/cmake && \
-    for f in /patch/cmake/*.patch; do \
-      patch -p1 < $f; \
-    done
+#RUN dnf -y install patch
+#COPY patch /patch
+#RUN cd /usr/share/cmake && \
+#    for f in /patch/cmake/*.patch; do \
+#      patch -p1 < $f; \
+#    done
 
 # From pywine.  Only do Python
 COPY pywine/wine-init.sh pywine/keys.gpg /tmp/helper/
