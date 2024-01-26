@@ -8,6 +8,8 @@ if [ -z "$DISPLAY" ]; then
   Xvfb $DISPLAY > /dev/null 2>&1 &
 fi
 
+export CTEST_OUTPUT_ON_FAILURE=y
+export CTEST_PARALLEL_LEVEL=16
 export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 export MINGW32_ROOT=/usr/i686-w64-mingw32/sys-root/mingw
 export WINEPREFIX=/wine
