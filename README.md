@@ -10,7 +10,12 @@ cross-compilation toolchain from Linux.  Usage:
 	git clone https://github.com/SWI-Prolog/swipl-devel.git
 	git submodule update --init
 ```
+  - Update submodules 
 
+```
+	cd docker-swipl-builg-mingw
+	git submodule update --init
+```
   - By default, the Docker image creates a user `swipl` with the UID and
     GID of the user that creates the image.  This user/group is used for
     the build process.  Edit GID and UID in Makefile if you want a
