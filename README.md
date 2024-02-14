@@ -7,16 +7,13 @@ cross-compilation toolchain from Linux.  Usage:
 
 ```
 	git clone https://github.com/SWI-Prolog/swipl-devel.git
-        cd swipl-devel
-	git submodule update --init
-	cd ..
+        git -C swipl-devel submodule update --init
 ```
   - Setup docker-swipl-build-mingw
 
 ```
 	git clone https://github.com/SWI-Prolog/docker-swipl-build-mingw.git
-	cd docker-swipl-build-mingw
-	git submodule update --init
+	git -C docker-swipl-build-mingw submodule update --init
 ```
   - Edit `Makefile` to make $SWIPLSRC point at a checked out source tree
     normally obtained using
