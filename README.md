@@ -3,7 +3,7 @@
 This  docker  builds   SWI-Prolog   for    Windows   using   the   MinGW
 cross-compilation toolchain from Linux.  Usage:
 
-  - Get source tree if you don't have them already
+  - Get source tree if you don't have it already
 
 ```
 	git clone https://github.com/SWI-Prolog/swipl-devel.git
