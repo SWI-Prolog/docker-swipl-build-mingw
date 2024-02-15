@@ -3,6 +3,18 @@
 This  docker  builds   SWI-Prolog   for    Windows   using   the   MinGW
 cross-compilation toolchain from Linux.  Usage:
 
+  - Get source tree if you don't have it already
+
+```
+	git clone https://github.com/SWI-Prolog/swipl-devel.git
+        git -C swipl-devel submodule update --init
+```
+  - Setup docker-swipl-build-mingw
+
+```
+	git clone https://github.com/SWI-Prolog/docker-swipl-build-mingw.git
+	git -C docker-swipl-build-mingw submodule update --init
+```
   - Edit `Makefile` to make $SWIPLSRC point at a checked out source tree
     normally obtained using
 
@@ -10,7 +22,6 @@ cross-compilation toolchain from Linux.  Usage:
 	git clone https://github.com/SWI-Prolog/swipl-devel.git
 	git submodule update --init
 ```
-
   - By default, the Docker image creates a user `swipl` with the UID and
     GID of the user that creates the image.  This user/group is used for
     the build process.  Edit GID and UID in Makefile if you want a
