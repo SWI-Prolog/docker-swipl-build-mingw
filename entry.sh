@@ -14,8 +14,11 @@ export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 export MINGW32_ROOT=/usr/i686-w64-mingw32/sys-root/mingw
 export WINEPREFIX=/wine
 export WINEDEBUG=-all
-export JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"* | sed 's/.*drive_c/c:/')
-export JAVA_HOME32=$(echo "$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk"* | sed 's/.*drive_c/c:/')
+export WINE_JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"*)
+export WINE_JAVA_HOME32=$(echo "$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk"*)
+
+export JAVA_HOME64=$(echo "$WINE_JAVA_HOME64" | sed 's/.*drive_c/c:/')
+export JAVA_HOME32=$(echo "$WINE_JAVA_HOME32" | sed 's/.*drive_c/c:/')
 
 if [ ! -f VERSION ]; then
   echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"

@@ -25,7 +25,7 @@ build_win64()
   ( cd $dir
     cmake -DCMAKE_BUILD_TYPE=PGO \
 	  -DSKIP_SSL_TESTS=ON \
-          -DJAVA_HOME="$WINEPREFIX/drive_c/Program Files/Java/jdk-13.0.2" \
+          -DJAVA_HOME="$WINE_JAVA_HOME64" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
@@ -48,7 +48,7 @@ build_win32()
   ( cd $dir
     cmake -DCMAKE_BUILD_TYPE=PGO \
 	  -DSKIP_SSL_TESTS=ON \
-	  -DJAVA_HOME="$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk-14.0.2+12" \
+	  -DJAVA_HOME="$WINE_JAVA_HOME32" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win32.cmake \
           -DJAVA_COMPATIBILITY=ON \
 	  -DJUNIT_JAR=/usr/share/java/junit.jar \
