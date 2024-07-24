@@ -24,6 +24,7 @@ build_win64()
   mkdir $dir
   ( cd $dir
     cmake -DCMAKE_BUILD_TYPE=PGO \
+	  -DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
 	  -DSKIP_SSL_TESTS=ON \
           -DJAVA_HOME="$WINE_JAVA_HOME64" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
@@ -47,6 +48,7 @@ build_win32()
   mkdir $dir
   ( cd $dir
     cmake -DCMAKE_BUILD_TYPE=PGO \
+	  -DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
 	  -DSKIP_SSL_TESTS=ON \
 	  -DJAVA_HOME="$WINE_JAVA_HOME32" \
           -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win32.cmake \
