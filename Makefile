@@ -1,7 +1,7 @@
 SWIPLSRC=$(HOME)/src/swipl-devel
 UID=$(shell id -u)
 GID=$(shell id -g)
-IMG=swipl-mingw-f39
+IMG=swipl-mingw-f41
 QIMG=docker.io/library/${IMG}
 IT=-it
 
@@ -37,4 +37,4 @@ win64:
 	docker run $(IT) --rm $(MOUNT) $(QIMG) --win64
 
 win:
-	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32 x--win64
+	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32 --win64

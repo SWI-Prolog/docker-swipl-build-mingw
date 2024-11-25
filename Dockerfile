@@ -1,4 +1,4 @@
-FROM fedora:39
+FROM fedora:41
 LABEL maintainer "Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf \
@@ -12,14 +12,14 @@ RUN dnf -y update && \
 		   mingw32-zlib mingw32-gmp mingw32-openssl mingw32-pcre \
 		   mingw32-pcre2 mingw32-libffi mingw32-libjpeg-turbo \
 		   xorg-x11-server-Xvfb \
-		   java-11-openjdk-devel junit
+		   java-latest-openjdk-devel junit
 
 ENV MINGW64_ROOT /usr/x86_64-w64-mingw32/sys-root/mingw
 ENV MINGW32_ROOT /usr/i686-w64-mingw32/sys-root/mingw
 ENV CROSS64 x86_64-w64-mingw32
 ENV CROSS32 i686-w64-mingw32
 
-ENV ARCHIVE_VERSION 3.7.2
+ENV ARCHIVE_VERSION 3.7.7
 ENV UUID_VERSION 1.6.2
 ENV BDB_VERSION 6.1.26
 
@@ -140,7 +140,7 @@ COPY pywine/mkuserwineprefix /opt/
 
 RUN xvfb-run sh /tmp/helper/wine-init.sh
 
-ARG PYTHON_VERSION=3.12.1
+ARG PYTHON_VERSION=3.13.0
 RUN umask 0 && cd /tmp/helper && \
   curl -LOO \
     https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.asc} \
