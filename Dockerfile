@@ -83,6 +83,7 @@ RUN install_bdb() { \
       tar zxf db-$BDB_VERSION.tar.gz; \
       ( cd db-$BDB_VERSION/build_unix; \
 	sed -i -e "s:WinIoCtl.h:winioctl.h:" ../src/dbinc/win_db.h; \
+	sed -i -e 's@\(#include "dbinc/txn.h"\)@\1\nint __repmgr_get_nsites __P((ENV *, u_int32_t *));\n@' ../src/rep/rep_method.c; \
 	../dist/configure --enable-mingw --host=$CROSS --prefix=$MINGW_ROOT \
 			  --enable-shared --disable-static; \
 	sed -i -e "s/^POSTLINK=.*/POSTLINK=true/" Makefile; \
