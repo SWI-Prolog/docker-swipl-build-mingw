@@ -25,21 +25,6 @@ ENV BDB_VERSION 6.1.26
 
 RUN mkdir -p /mingw/src
 
-RUN install_libxpm() { \
-      ( cd libXpm/lib; \
-        autoconf; \
-        ./configure --host=$CROSS --prefix=$MINGW_ROOT; \
-        make -f Makefile.mingw; \
-        make -f Makefile.mingw install; \
-      ); \
-    }; \
-    cd /mingw/src && \
-    git clone https://github.com/SWI-Prolog/libXpm.git && \
-    CROSS=$CROSS64 MINGW_ROOT=$MINGW64_ROOT install_libxpm && \
-    git -C libXpm clean -xfd && \
-    CROSS=$CROSS32 MINGW_ROOT=$MINGW32_ROOT install_libxpm && \
-    rm -rf libXpm
-
 RUN install_yaml() { \
       ( cd libyaml; \
         ./bootstrap; \
