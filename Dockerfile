@@ -108,7 +108,8 @@ ENV OPENJDK64 openjdk-21.0.1_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
 ENV OPENJDK32 OpenJDK14U-jdk_x86-32_windows_hotspot_14.0.2_12.zip
 RUN curl -L https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/${OPENJDK32} > ${OPENJDK32}
-COPY deps/Win64OpenSSL_Light-3_2_0.exe /Win64OpenSSL.exe
+COPY deps/Win64OpenSSL_Light-3_2_3.exe /Win64OpenSSL.exe
+COPY deps/Win32OpenSSL_Light-3_2_3.exe /Win32OpenSSL.exe
 
 # Patch uninstall issues in CMake 3.25.2.  We should remove and the
 # patch file after CMake has been updated.  Used to use `git apply`,
@@ -153,6 +154,7 @@ RUN export DISPLAY=:32 && \
     (Xvfb $DISPLAY > /dev/null 2>&1 &) && \
     mkdir -p $WINEPREFIX/drive_c/tmp && \
     WINEDEBUG=-all WINEPREFIX=${WINEPREFIX} wine /Win64OpenSSL.exe /SILENT && \
+    WINEDEBUG=-all WINEPREFIX=${WINEPREFIX} wine /Win32OpenSSL.exe /SILENT && \
     mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
     cd "${WINEPREFIX}/drive_c/Program Files/Java" && \
     unzip -qq /${OPENJDK64} && \
@@ -161,11 +163,20 @@ RUN export DISPLAY=:32 && \
     unzip -qq /${OPENJDK32}
 RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
+USER root
+
+# Work around broken SSL dlls in Fedora 41.
+# See https://bugzilla.redhat.com/show_bug.cgi?id=2333301
+RUN cp /wine/drive_c/Program\ Files/OpenSSL-Win64/bin/*x64.dll $MINGW64_ROOT/bin && \
+    cp "/wine/drive_c/Program Files (x86)/OpenSSL-Win32/bin/"*-3.dll $MINGW32_ROOT/bin
+
 COPY deps/emacs-module.h $MINGW64_ROOT/include
 COPY deps/emacs-module.h $MINGW32_ROOT/include
 
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
+
+USER swipl:swipl
 
 ENV LANG C.UTF-8
 ENTRYPOINT ["/entry.sh"]
