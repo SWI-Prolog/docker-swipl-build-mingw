@@ -1,7 +1,7 @@
 FROM fedora:42
 LABEL maintainer "Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
-    dnf -y install gcc ninja-build cmake make automake libtool autoconf \
+    dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
     diffutils git \
     unzip sudo \
     wine mingw64-nsis \
@@ -96,7 +96,7 @@ ENV WINEPREFIX /wine
 ENV WINEDEBUG -all
 ENV OPENJDK64 openjdk-21.0.1_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
-COPY deps/Win64OpenSSL_Light-3_2_0.exe /Win64OpenSSL.exe
+COPY deps/Win64OpenSSL_Light-3_4_0.exe /Win64OpenSSL.exe
 
 # Patch uninstall issues in CMake 3.25.2.  We should remove and the
 # patch file after CMake has been updated.  Used to use `git apply`,
