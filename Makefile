@@ -1,7 +1,7 @@
 SWIPLSRC=$(HOME)/src/swipl-devel
 UID=$(shell id -u)
 GID=$(shell id -g)
-IMG=swipl-mingw-f41
+IMG=swipl-mingw-f42
 QIMG=docker.io/library/${IMG}
 IT=-it
 
@@ -14,9 +14,8 @@ all::
 	@echo "  image     Build the docker image"
 	@echo "  run       Run a shell for building SWI-Prolog"
 	@echo "  runx11    As 'run', providing X11 graphics"
-	@echo "  win32     Build and package 32-bit version"
 	@echo "  win64     Build and package 64-bit version"
-	@echo "  win       Build and package both 32-bit and 64-bit version"
+	@echo "  win       Build and package 64-bit version"
 	@echo
 
 BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
@@ -30,11 +29,8 @@ run:
 run11:
 	docker run $(IT) --rm $(MOUNT) $(MOUNTX11) -e DISPLAY=${DISPLAY} $(QIMG)
 
-win32:
-	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32
-
 win64:
 	docker run $(IT) --rm $(MOUNT) $(QIMG) --win64
 
 win:
-	docker run $(IT) --rm $(MOUNT) $(QIMG) --win32 --win64
+	docker run $(IT) --rm $(MOUNT) $(QIMG) --win64
