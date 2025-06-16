@@ -127,6 +127,14 @@ RUN umask 0 && cd /tmp/helper && \
   cd .. && rm -Rf helper && \
   rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
+# Get SDL3_Image
+COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
+RUN cd /mingw/src && \
+    git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
+    cd SDL_image && mkdir build && cd build && \
+    cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
+    make && make install
+
 ARG GID=1000
 ARG UID=1000
 
