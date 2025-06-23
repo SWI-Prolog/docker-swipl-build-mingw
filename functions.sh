@@ -76,3 +76,7 @@ win64()
 }
 
 PS1="[MinGW] (\W) \!_> "
+
+cls()
+{ clear && printf '\e[3J'
+}
