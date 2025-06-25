@@ -11,14 +11,10 @@ fi
 export CTEST_OUTPUT_ON_FAILURE=y
 export CTEST_PARALLEL_LEVEL=16
 export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
-export MINGW32_ROOT=/usr/i686-w64-mingw32/sys-root/mingw
 export WINEPREFIX=/wine
 export WINEDEBUG=-all
 export WINE_JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"*)
-export WINE_JAVA_HOME32=$(echo "$WINEPREFIX/drive_c/Program Files (x86)/Java/jdk"*)
-
 export JAVA_HOME64=$(echo "$WINE_JAVA_HOME64" | sed 's/.*drive_c/c:/')
-export JAVA_HOME32=$(echo "$WINE_JAVA_HOME32" | sed 's/.*drive_c/c:/')
 
 if [ ! -f VERSION ]; then
   echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
@@ -30,10 +26,8 @@ if [ -z "$*" ]; then
   echo "Starting interactive shell for cross-compiling SWI-Prolog"
   echo "Commands:"
   echo ""
-  echo "  build_win32     -- build 32-bit version in build.win32"
   echo "  build_win64     -- build 64-bit version in build.win64"
   echo ""
-  echo "  win32		  -- Setup for win32 and enter build.win32"
   echo "  win64           -- Setup for win64 and enter build.win64"
   echo ""
 
@@ -48,12 +42,8 @@ else
 	  build_win64
 	  shift
 	  ;;
-      --win32)
-	  build_win32
-	  shift
-	  ;;
       *)
-	  echo "Options: --win32 --win64"
+	  echo "Options: --win64"
 	  exit 1
 	  done=true
     esac

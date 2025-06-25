@@ -14,6 +14,24 @@ must_be_in_source_root()
   fi
 }
 
+config_win64()
+{ BUILD_TYPE=PGO
+
+  if [ ! -z "$1" ]; then
+      BUILD_TYPE=$1
+  fi
+
+  cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+	-DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
+	-DSKIP_SSL_TESTS=ON \
+        -DJAVA_HOME="$WINE_JAVA_HOME64" \
+        -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
+        -DJAVA_COMPATIBILITY=ON \
+	-DJUNIT_JAR=/usr/share/java/junit.jar \
+	-DPython_ROOT_DIR=$WINEPREFIX/drive_c/Python \
+        -G Ninja ..
+}
+
 build_win64()
 { must_be_in_source_root || return 1
 
@@ -23,49 +41,11 @@ build_win64()
   rm -rf $dir
   mkdir $dir
   ( cd $dir
-    cmake -DCMAKE_BUILD_TYPE=PGO \
-	  -DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
-	  -DSKIP_SSL_TESTS=ON \
-          -DJAVA_HOME="$WINE_JAVA_HOME64" \
-          -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win64.cmake \
-          -DJAVA_COMPATIBILITY=ON \
-	  -DJUNIT_JAR=/usr/share/java/junit.jar \
-	  -DPython_ROOT_DIR=$WINEPREFIX/drive_c/Python \
-          -G Ninja ..
+    config_win64 PGO
     timeout -k 2m 1h ninja $nopts
     timeout -k 2m 1h ninja $nopts
     cpack
   )
-}
-
-build_win32()
-{ must_be_in_source_root || return 1
-
-  dir=build.win32
-  export JAVA_HOME="$JAVA_HOME32"
-
-  rm -rf $dir
-  mkdir $dir
-  ( cd $dir
-    cmake -DCMAKE_BUILD_TYPE=PGO \
-	  -DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
-	  -DSKIP_SSL_TESTS=ON \
-	  -DJAVA_HOME="$WINE_JAVA_HOME32" \
-          -DCMAKE_TOOLCHAIN_FILE=../cmake/cross/linux_win32.cmake \
-          -DJAVA_COMPATIBILITY=ON \
-	  -DJUNIT_JAR=/usr/share/java/junit.jar \
-          -G Ninja ..
-    timeout -k 2m 1h ninja $nopts
-    timeout -k 2m 1h ninja $nopts
-    cpack
-  )
-}
-
-win32()
-{ export JAVA_HOME="$JAVA_HOME32"
-  mkdir -p $SWIPL_SOURCE_DIR/build.win32
-  cd $SWIPL_SOURCE_DIR/build.win32
-  PS1="[MinGW 32] (\W) \!_> "
 }
 
 win64()
