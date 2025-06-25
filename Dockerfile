@@ -4,7 +4,7 @@ RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
     diffutils git \
     unzip sudo \
-    wine mingw64-nsis \
+    wine mingw32-nsis mingw64-nsis \
     mingw64-gcc mingw64-zlib mingw64-gcc-c++ \
     mingw64-zlib mingw64-gmp mingw64-openssl \
     mingw64-pcre2 mingw64-libffi \
