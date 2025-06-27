@@ -150,9 +150,13 @@ ARG UID=1000
 RUN groupadd -g $GID -o swipl && \
     useradd  -u $UID -g $GID -o swipl && \
     mkdir -p $WINEPREFIX && \
-    chown swipl:swipl $WINEPREFIX
+    chown swipl:swipl $WINEPREFIX && \
+    mkdir -p /home/swipl/tmp && \
+    chmod 700 /home/swipl/tmp && \
+    chown swipl:swipl /home/swipl/tmp
 
 USER swipl:swipl
+ENV XDG_RUNTIME_DIR /home/swipl/tmp
 
 RUN export DISPLAY=:32 && \
     (Xvfb $DISPLAY > /dev/null 2>&1 &) && \
