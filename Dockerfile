@@ -139,7 +139,7 @@ RUN cd /mingw/src && \
 RUN cd /mingw/src && \
     git clone https://github.com/SWI-Prolog/winlibedit.git && \
     cd winlibedit && \
-    git checkout e9720b0ffb0bc8e7d16f40202772233d63439ab8 && \
+    git checkout 1a98b8f6c6e3105b4721725fcd18057a426dd10a && \
     ./configure --prefix=$MINGW64_ROOT -host=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 --enable-pic --enable-static --disable-shared 'CFLAGS=-Isrc -I. -D__STDC_ISO_10646__' && \
     make -j && \
     make install
