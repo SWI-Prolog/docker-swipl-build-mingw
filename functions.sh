@@ -15,13 +15,14 @@ must_be_in_source_root()
 }
 
 config_win64()
-{ BUILD_TYPE=PGO
+{ BUILD_TYPE=${BUILD_TYPE:=PGO}
+  OPTS=${OPTS:=}
 
   if [ ! -z "$1" ]; then
       BUILD_TYPE=$1
   fi
 
-  cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+  cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $OPTS \
 	-DSWIPL_CC=gcc.exe -DSWIPL_CXX=g++.exe \
 	-DSKIP_SSL_TESTS=ON \
         -DJAVA_HOME="$WINE_JAVA_HOME64" \
