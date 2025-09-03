@@ -1,5 +1,5 @@
 FROM fedora:42
-LABEL maintainer "Jan Wielemaker <jan@swi-prolog.org>"
+LABEL maintainer="Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
     diffutils git \
@@ -14,12 +14,12 @@ RUN dnf -y update && \
     xorg-x11-server-Xvfb \
     java-latest-openjdk-devel junit
 
-ENV MINGW64_ROOT /usr/x86_64-w64-mingw32/sys-root/mingw
-ENV CROSS64 x86_64-w64-mingw32
+ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
+ENV CROSS64=x86_64-w64-mingw32
 
-ENV ARCHIVE_VERSION 3.7.7
-ENV UUID_VERSION 1.6.2
-ENV BDB_VERSION 6.1.26
+ENV ARCHIVE_VERSION=3.7.7
+ENV UUID_VERSION=1.6.2
+ENV BDB_VERSION=6.1.26
 
 RUN mkdir -p /mingw/src
 
@@ -92,9 +92,9 @@ RUN install_bdb() { \
 
 # Create Wine setup with OpenSSL and OpenJDK
 
-ENV WINEPREFIX /wine
-ENV WINEDEBUG -all
-ENV OPENJDK64 openjdk-21.0.1_windows-x64_bin.zip
+ENV WINEPREFIX=/wine
+ENV WINEDEBUG=-all
+ENV OPENJDK64=openjdk-21.0.1_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
 COPY deps/Win64OpenSSL_Light-3_4_0.exe /Win64OpenSSL.exe
 
@@ -156,7 +156,7 @@ RUN groupadd -g $GID -o swipl && \
     chown swipl:swipl /home/swipl/tmp
 
 USER swipl:swipl
-ENV XDG_RUNTIME_DIR /home/swipl/tmp
+ENV XDG_RUNTIME_DIR=/home/swipl/tmp
 
 RUN export DISPLAY=:32 && \
     (Xvfb $DISPLAY > /dev/null 2>&1 &) && \
@@ -172,5 +172,5 @@ COPY deps/emacs-module.h $MINGW64_ROOT/include
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 ENTRYPOINT ["/entry.sh"]
