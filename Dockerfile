@@ -131,7 +131,8 @@ RUN umask 0 && cd /tmp/helper && \
 COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
 RUN cd /mingw/src && \
     git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
-    cd SDL_image && mkdir build && cd build && \
+    cd SDL_image && git checkout release-3.2.4 && git submodule update && \
+    mkdir build && cd build && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
     make && make install
 
