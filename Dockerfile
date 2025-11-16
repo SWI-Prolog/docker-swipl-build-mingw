@@ -136,15 +136,6 @@ RUN cd /mingw/src && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
     make && make install
 
-# Get libedit
-RUN cd /mingw/src && \
-    git clone https://github.com/SWI-Prolog/winlibedit.git && \
-    cd winlibedit && \
-    git checkout 29d495fca11531a8ec636f40c86e0cd88a7f40fa && \
-    ./configure --prefix=$MINGW64_ROOT -host=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 --enable-pic --enable-static --disable-shared 'CFLAGS=-Isrc -I. -D__STDC_ISO_10646__' && \
-    make -j && \
-    make install
-
 ARG GID=1000
 ARG UID=1000
 
