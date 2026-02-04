@@ -1,7 +1,7 @@
 SWIPLSRC=$(HOME)/src/swipl-devel
 UID=$(shell id -u)
 GID=$(shell id -g)
-IMG=swipl-mingw-f42
+IMG=swipl-mingw-f43
 QIMG=docker.io/library/${IMG}
 IT=-it
 

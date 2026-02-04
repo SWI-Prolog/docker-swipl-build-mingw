@@ -1,4 +1,4 @@
-FROM fedora:42
+FROM fedora:43
 LABEL maintainer="Jan Wielemaker <jan@swi-prolog.org>"
 RUN dnf -y update && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
@@ -17,7 +17,7 @@ RUN dnf -y update && \
 ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 ENV CROSS64=x86_64-w64-mingw32
 
-ENV ARCHIVE_VERSION=3.7.7
+ENV ARCHIVE_VERSION=3.8.5
 ENV UUID_VERSION=1.6.2
 ENV BDB_VERSION=6.1.26
 
@@ -109,32 +109,43 @@ RUN cd /usr/share/cmake && \
     done
 
 # From pywine.  Only do Python
-COPY pywine/wine-init.sh pywine/keys.gpg /tmp/helper/
+COPY pywine/wine-init.sh pywine/SHA256SUMS.txt /tmp/helper/
 COPY pywine/mkuserwineprefix /opt/
 
 RUN xvfb-run sh /tmp/helper/wine-init.sh
 
-ARG PYTHON_VERSION=3.13.0
-RUN umask 0 && cd /tmp/helper && \
-  curl -LOO \
-    https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.asc} \
+# renovate: datasource=github-tags depName=python/cpython versioning=pep440
+ARG PYTHON_VERSION=3.14.3
+# renovate: datasource=github-releases depName=upx/upx versioning=loose
+ARG UPX_VERSION=5.1.0
+
+RUN --mount=from=ghcr.io/sigstore/cosign/cosign:v3.0.4@sha256:0b015a3557a64a751712da8a6395534160018eaaa2d969882a85a336de9adb70,source=/ko-app/cosign,target=/usr/bin/cosign \
+  umask 0 && cd /tmp/helper && \
+  curl --fail-with-body -LOO \
+    "https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.sigstore}" \
+    https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-win64.zip \
   && \
-  gpgv --keyring ./keys.gpg python-${PYTHON_VERSION}-amd64.exe.asc python-${PYTHON_VERSION}-amd64.exe && \
+  cosign verify-blob --certificate-oidc-issuer https://github.com/login/oauth --certificate-identity-regexp='@python.org$' \
+    --bundle python-${PYTHON_VERSION}-amd64.exe.sigstore python-${PYTHON_VERSION}-amd64.exe && \
+  sha256sum -c SHA256SUMS.txt && \
   xvfb-run sh -c "\
     wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
       Include_doc=0 InstallAllUsers=1 PrependPath=1; \
     wineserver -w" && \
-  cd .. && rm -Rf helper && \
-  rm -rf /tmp/.X11-unix /tmp/.X32-lock
+  unzip upx*.zip && \
+  mv -v upx*/upx.exe ${WINEPREFIX}/drive_c/windows/ && \
+  cd .. && rm -Rf helper
 
 # Get SDL3_Image
 COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
 RUN cd /mingw/src && \
     git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
-    cd SDL_image && git checkout release-3.2.4 && git submodule update && \
+    cd SDL_image && git checkout release-3.2.6 && git submodule update && \
     mkdir build && cd build && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
     make && make install
+
+RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
 ARG GID=1000
 ARG UID=1000
