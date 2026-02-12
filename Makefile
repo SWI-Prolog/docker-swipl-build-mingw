@@ -5,7 +5,7 @@ IMG=swipl-mingw-f43
 QIMG=docker.io/library/${IMG}
 IT=-it
 
-MOUNT=	  -v $(SWIPLSRC):/home/swipl/src/swipl-devel
+MOUNT=	  -v $(SWIPLSRC):/home/swipl/src/swipl-devel:z
 MOUNTX11= -v /tmp/.X11-unix:/tmp/.X11-unix
 
 all::
