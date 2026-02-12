@@ -48,7 +48,7 @@ RUN install_libarchive() { \
 	./configure --host=$CROSS --prefix=$MINGW_ROOT --with-pic --with-zlib \
 	--without-iconv --without-openssl --without-nettle --without-xml2 \
 	--without-expat --without-bz2lib --without-lzma --without-lzo2; \
-	make; \
+	make -j $(nproc); \
 	make install; \
       ); \
     }; \
@@ -62,7 +62,7 @@ RUN install_uuid() { \
       ( cd uuid-$UUID_VERSION; \
         sed -i -e "s/-m 755 uuid /-m 755 uuid.exe /" Makefile.in; \
         ac_cv_va_copy=1 ./configure --host=$CROSS --prefix=$MINGW_ROOT; \
-        make; \
+        make -j $(nproc); \
         make install; \
       ); \
     }; \
@@ -79,7 +79,7 @@ RUN install_bdb() { \
 	../dist/configure --enable-mingw --host=$CROSS --prefix=$MINGW_ROOT \
 			  --enable-shared --disable-static; \
 	sed -i -e "s/^POSTLINK=.*/POSTLINK=true/" Makefile; \
-	make library_build; \
+	make -j $(nproc) library_build; \
 	make install_lib install_include; \
 	cd $MINGW_ROOT/lib; \
 	[ -f libdb.dll.a ] || ln -s libdb-*.dll.a libdb.dll.a; \
