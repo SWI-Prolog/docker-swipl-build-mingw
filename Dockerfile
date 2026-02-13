@@ -140,10 +140,10 @@ RUN --mount=from=ghcr.io/sigstore/cosign/cosign:v3.0.4@sha256:0b015a3557a64a7517
 COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
 RUN cd /mingw/src && \
     git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
-    cd SDL_image && git checkout release-3.2.6 && git submodule update && \
+    cd SDL_image && git checkout release-3.4.0 && git submodule update && \
     mkdir build && cd build && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
-    make && make install
+    make -j $(nproc) && make install
 
 RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
