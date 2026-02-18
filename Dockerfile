@@ -1,8 +1,17 @@
 FROM fedora:43
 LABEL maintainer="Jan Wielemaker <jan@swi-prolog.org>"
-RUN dnf -y update && \
+
+ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
+    CROSS64=x86_64-w64-mingw32 \
+    WINEPREFIX=/wine \
+    WINEDEBUG=-all \
+    WINEDLLOVERRIDES="winex11.drv=d;winwayland.drv=d" \
+    WINE_DISABLE_GRAPHICS_DRIVER=1 \
+    LANG=C.UTF-8
+
+RUN dnf -y update --refresh && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
-    diffutils git \
+    diffutils git patch \
     unzip sudo \
     wine mingw32-nsis mingw64-nsis \
     mingw64-gcc mingw64-zlib mingw64-gcc-c++ \
@@ -11,16 +20,14 @@ RUN dnf -y update && \
     mingw64-SDL3.noarch mingw64-SDL3-static.noarch \
     mingw64-cairo.noarch mingw64-cairo-static.noarch \
     mingw64-pango.noarch mingw64-pango-static.noarch \
-    xorg-x11-server-Xvfb \
     java-latest-openjdk-devel junit \
-    procps
+    procps && \
+    dnf clean all
 
-ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
-ENV CROSS64=x86_64-w64-mingw32
-
-ENV ARCHIVE_VERSION=3.8.5
-ENV UUID_VERSION=1.6.2
-ENV BDB_VERSION=6.1.26
+RUN mkdir -p $WINEPREFIX && \
+    wineboot -u && \
+    wineserver -w && \
+    rm -rf $WINEPREFIX/drive_c/users/root/Temp/*
 
 RUN mkdir -p /mingw/src
 
@@ -36,6 +43,10 @@ RUN install_yaml() { \
     git clone https://github.com/yaml/libyaml && \
     CROSS=$CROSS64 MINGW_ROOT=$MINGW64_ROOT install_yaml && \
     rm -rf libyaml
+
+ARG ARCHIVE_VERSION=3.8.5
+ARG UUID_VERSION=1.6.2
+ARG BDB_VERSION=6.1.26
 
 COPY deps/libarchive-$ARCHIVE_VERSION.tar.gz /mingw/src/
 RUN install_libarchive() { \
@@ -93,8 +104,6 @@ RUN install_bdb() { \
 
 # Create Wine setup with OpenSSL and OpenJDK
 
-ENV WINEPREFIX=/wine
-ENV WINEDEBUG=-all
 ENV OPENJDK64=openjdk-21.0.1_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
 COPY deps/Win64OpenSSL_Light-3_4_0.exe /Win64OpenSSL.exe
@@ -102,7 +111,6 @@ COPY deps/Win64OpenSSL_Light-3_4_0.exe /Win64OpenSSL.exe
 # Patch uninstall issues in CMake 3.25.2.  We should remove and the
 # patch file after CMake has been updated.  Used to use `git apply`,
 # but that not appear the work if there is even the slightest change.
-RUN dnf -y install patch
 COPY patch /patch
 RUN cd /usr/share/cmake && \
     for f in /patch/cmake/*.patch; do \
@@ -113,7 +121,7 @@ RUN cd /usr/share/cmake && \
 COPY pywine/wine-init.sh pywine/SHA256SUMS.txt /tmp/helper/
 COPY pywine/mkuserwineprefix /opt/
 
-RUN xvfb-run sh /tmp/helper/wine-init.sh
+RUN sh /tmp/helper/wine-init.sh
 
 # renovate: datasource=github-tags depName=python/cpython versioning=pep440
 ARG PYTHON_VERSION=3.14.3
@@ -129,10 +137,9 @@ RUN --mount=from=ghcr.io/sigstore/cosign/cosign:v3.0.4@sha256:0b015a3557a64a7517
   cosign verify-blob --certificate-oidc-issuer https://github.com/login/oauth --certificate-identity-regexp='@python.org$' \
     --bundle python-${PYTHON_VERSION}-amd64.exe.sigstore python-${PYTHON_VERSION}-amd64.exe && \
   sha256sum -c SHA256SUMS.txt && \
-  xvfb-run sh -c "\
-    wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
+  wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
       Include_doc=0 InstallAllUsers=1 PrependPath=1; \
-    wineserver -w" && \
+  wineserver -w && \
   unzip upx*.zip && \
   mv -v upx*/upx.exe ${WINEPREFIX}/drive_c/windows/ && \
   cd .. && rm -Rf helper
@@ -146,8 +153,6 @@ RUN cd /mingw/src && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
     make -j $(nproc) && make install
 
-RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
-
 ARG GID=1000
 ARG UID=1000
 
@@ -159,22 +164,18 @@ RUN groupadd -g $GID -o swipl && \
     chmod 700 /home/swipl/tmp && \
     chown swipl:swipl /home/swipl/tmp
 
+RUN chown -R swipl:swipl $WINEPREFIX
 USER swipl:swipl
 ENV XDG_RUNTIME_DIR=/home/swipl/tmp
 
-RUN export DISPLAY=:32 && \
-    (Xvfb $DISPLAY > /dev/null 2>&1 &) && \
-    mkdir -p $WINEPREFIX/drive_c/tmp && \
-    WINEDEBUG=-all WINEPREFIX=${WINEPREFIX} wine /Win64OpenSSL.exe /SILENT && \
-    mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
+#RUN ls -l /Win64OpenSSL.exe && wine /Win64OpenSSL.exe /SILENT 
+RUN mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
     cd "${WINEPREFIX}/drive_c/Program Files/Java" && \
     unzip -qq /${OPENJDK64}
-RUN rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
 COPY deps/emacs-module.h $MINGW64_ROOT/include
 
 COPY entry.sh entry.sh
 COPY functions.sh functions.sh
 
-ENV LANG=C.UTF-8
 ENTRYPOINT ["/entry.sh"]

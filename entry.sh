@@ -3,18 +3,21 @@
 export SWIPL_SOURCE_DIR=/home/swipl/src/swipl-devel
 cd $SWIPL_SOURCE_DIR
 
-if [ -z "$DISPLAY" ]; then
-  export DISPLAY=:32
-  Xvfb $DISPLAY > /dev/null 2>&1 &
-fi
+unset DISPLAY
+unset WAYLAND_DISPLAY
+export WINEDLLOVERRIDES="winex11.drv=d;winwayland.drv=d"
+export WINEDEBUG=-all
+export WINEPREFIX=/wine
 
 export CTEST_OUTPUT_ON_FAILURE=y
 export CTEST_PARALLEL_LEVEL=16
 export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
-export WINEPREFIX=/wine
-export WINEDEBUG=-all
 export WINE_JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"*)
 export JAVA_HOME64=$(echo "$WINE_JAVA_HOME64" | sed 's/.*drive_c/c:/')
+
+if [ ! -d "$WINEPREFIX/system.reg" ]; then
+  wineboot -u
+fi
 
 if [ ! -f VERSION ]; then
   echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
