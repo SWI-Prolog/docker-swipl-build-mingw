@@ -12,7 +12,8 @@ RUN dnf -y update && \
     mingw64-cairo.noarch mingw64-cairo-static.noarch \
     mingw64-pango.noarch mingw64-pango-static.noarch \
     xorg-x11-server-Xvfb \
-    java-latest-openjdk-devel junit
+    java-latest-openjdk-devel junit \
+    procps
 
 ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 ENV CROSS64=x86_64-w64-mingw32
