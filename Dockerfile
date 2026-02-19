@@ -170,7 +170,7 @@ RUN groupadd -g $GID -o swipl && \
 USER swipl:swipl
 ENV XDG_RUNTIME_DIR=/home/swipl/tmp
 
-RUN xvfb-run wine /Win64OpenSSL.exe /SILENT && \
+RUN xvfb-run sh -c "wine /Win64OpenSSL.exe /SILENT; wineserver -w" && \
     mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
     cd "${WINEPREFIX}/drive_c/Program Files/Java" && \
     unzip -qq /${OPENJDK64} && \
