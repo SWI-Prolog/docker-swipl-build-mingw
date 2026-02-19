@@ -1,14 +1,6 @@
 FROM fedora:43
 LABEL maintainer="Jan Wielemaker <jan@swi-prolog.org>"
 
-ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
-    CROSS64=x86_64-w64-mingw32 \
-    WINEPREFIX=/wine \
-    WINEDEBUG=-all \
-    WINEDLLOVERRIDES="winex11.drv=d;winwayland.drv=d" \
-    WINE_DISABLE_GRAPHICS_DRIVER=1 \
-    LANG=C.UTF-8
-
 RUN dnf -y update --refresh && \
     dnf -y install gcc ninja-build cmake make automake libtool autoconf gawk \
     diffutils git patch \
@@ -20,14 +12,14 @@ RUN dnf -y update --refresh && \
     mingw64-SDL3.noarch mingw64-SDL3-static.noarch \
     mingw64-cairo.noarch mingw64-cairo-static.noarch \
     mingw64-pango.noarch mingw64-pango-static.noarch \
+    xorg-x11-server-Xvfb \
     java-latest-openjdk-devel junit \
     procps && \
     dnf clean all
 
-RUN mkdir -p $WINEPREFIX && \
-    wineboot -u && \
-    wineserver -w && \
-    rm -rf $WINEPREFIX/drive_c/users/root/Temp/*
+ENV MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
+    CROSS64=x86_64-w64-mingw32 \
+    LANG=C.UTF-8
 
 RUN mkdir -p /mingw/src
 
@@ -47,6 +39,7 @@ RUN install_yaml() { \
 ARG ARCHIVE_VERSION=3.8.5
 ARG UUID_VERSION=1.6.2
 ARG BDB_VERSION=6.1.26
+ARG SDL_VERSION=3.4.0
 
 COPY deps/libarchive-$ARCHIVE_VERSION.tar.gz /mingw/src/
 RUN install_libarchive() { \
@@ -102,7 +95,25 @@ RUN install_bdb() { \
     CROSS=$CROSS64 MINGW_ROOT=$MINGW64_ROOT install_bdb	&& \
     rm -rf db-$BDB_VERSION
 
+# Get SDL3_Image
+COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
+RUN cd /mingw/src && \
+    git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
+    cd SDL_image && git checkout release-$SDL_VERSION && git submodule update && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
+    make -j $(nproc) && make install
+
 # Create Wine setup with OpenSSL and OpenJDK
+
+ENV WINEPREFIX=/wine \
+    WINEDEBUG=-all \
+    WINEDLLOVERRIDES="winemenubuilder.exe=d"
+
+RUN mkdir -p $WINEPREFIX && \
+    wineboot -u && \
+    wineserver -w && \
+    rm -rf $WINEPREFIX/drive_c/users/root/Temp/*
 
 ENV OPENJDK64=openjdk-21.0.1_windows-x64_bin.zip
 RUN curl https://download.java.net/java/GA/jdk21.0.1/415e3f918a1f4062a0074a2794853d0d/12/GPL/${OPENJDK64} > ${OPENJDK64}
@@ -121,7 +132,7 @@ RUN cd /usr/share/cmake && \
 COPY pywine/wine-init.sh pywine/SHA256SUMS.txt /tmp/helper/
 COPY pywine/mkuserwineprefix /opt/
 
-RUN sh /tmp/helper/wine-init.sh
+RUN xvfb-run sh /tmp/helper/wine-init.sh
 
 # renovate: datasource=github-tags depName=python/cpython versioning=pep440
 ARG PYTHON_VERSION=3.14.3
@@ -137,41 +148,33 @@ RUN --mount=from=ghcr.io/sigstore/cosign/cosign:v3.0.4@sha256:0b015a3557a64a7517
   cosign verify-blob --certificate-oidc-issuer https://github.com/login/oauth --certificate-identity-regexp='@python.org$' \
     --bundle python-${PYTHON_VERSION}-amd64.exe.sigstore python-${PYTHON_VERSION}-amd64.exe && \
   sha256sum -c SHA256SUMS.txt && \
-  wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
+  xvfb-run sh -c "\
+    wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python \
       Include_doc=0 InstallAllUsers=1 PrependPath=1; \
-  wineserver -w && \
+    wineserver -w" && \
   unzip upx*.zip && \
   mv -v upx*/upx.exe ${WINEPREFIX}/drive_c/windows/ && \
-  cd .. && rm -Rf helper
-
-# Get SDL3_Image
-COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
-RUN cd /mingw/src && \
-    git clone --recurse-submodules https://github.com/libsdl-org/SDL_image.git && \
-    cd SDL_image && git checkout release-3.4.0 && git submodule update && \
-    mkdir build && cd build && \
-    cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
-    make -j $(nproc) && make install
+  cd .. && rm -Rf helper && \
+  rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
 ARG GID=1000
 ARG UID=1000
 
 RUN groupadd -g $GID -o swipl && \
     useradd  -u $UID -g $GID -o swipl && \
-    mkdir -p $WINEPREFIX && \
-    chown swipl:swipl $WINEPREFIX && \
+    chown -R swipl:swipl $WINEPREFIX && \
     mkdir -p /home/swipl/tmp && \
     chmod 700 /home/swipl/tmp && \
     chown swipl:swipl /home/swipl/tmp
 
-RUN chown -R swipl:swipl $WINEPREFIX
 USER swipl:swipl
 ENV XDG_RUNTIME_DIR=/home/swipl/tmp
 
-#RUN ls -l /Win64OpenSSL.exe && wine /Win64OpenSSL.exe /SILENT 
-RUN mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
+RUN xvfb-run wine /Win64OpenSSL.exe /SILENT && \
+    mkdir -p "${WINEPREFIX}/drive_c/Program Files/Java" && \
     cd "${WINEPREFIX}/drive_c/Program Files/Java" && \
-    unzip -qq /${OPENJDK64}
+    unzip -qq /${OPENJDK64} && \
+    rm -rf /tmp/.X11-unix /tmp/.X32-lock
 
 COPY deps/emacs-module.h $MINGW64_ROOT/include
 

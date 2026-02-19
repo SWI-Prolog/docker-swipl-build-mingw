@@ -22,7 +22,7 @@ all::
 BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
 
 image:	Dockerfile
-	docker pull fedora:43
+#	docker pull fedora:43
 	docker build $(BUILDARGS) -t $(IMG) . 2>&1 | tee mkimg.log
 
 run:
