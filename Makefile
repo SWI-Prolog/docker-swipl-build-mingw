@@ -16,7 +16,7 @@ all::
 	@echo "  run       Run a shell for building SWI-Prolog"
 	@echo "  runx11    As 'run', providing X11 graphics"
 	@echo "  win64     Build and package 64-bit version"
-	@echo "  win       Build and package 64-bit version"
+	@echo "  update    Do incremental build of Win64 version"
 	@echo
 
 BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
@@ -30,6 +30,9 @@ run:
 
 run11:
 	docker run $(IT) --rm $(MOUNT) $(MOUNTX11) -e DISPLAY=${DISPLAY} $(QIMG)
+
+update:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --update
 
 win64:
 	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --win64

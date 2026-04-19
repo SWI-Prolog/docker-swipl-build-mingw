@@ -45,6 +45,10 @@ else
 	  build_win64
 	  shift
 	  ;;
+      --update)
+	  update_win64
+	  shift
+	  ;;
       *)
 	  echo "Options: --win64"
 	  exit 1

@@ -49,6 +49,18 @@ build_win64()
   )
 }
 
+update_win64()
+{ must_be_in_source_root || return 1
+
+  dir=build.win64
+  export JAVA_HOME="$JAVA_HOME64"
+
+  ( cd $dir
+    timeout -k 1m 2m ninja $nopts
+    timeout -k 1m 2m ninja $nopts
+  )
+}
+
 win64()
 { export JAVA_HOME="$JAVA_HOME64"
   mkdir -p $SWIPL_SOURCE_DIR/build.win64
