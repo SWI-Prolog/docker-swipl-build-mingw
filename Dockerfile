@@ -104,6 +104,15 @@ RUN cd /mingw/src && \
     cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
     make -j $(nproc) && make install
 
+# Get SDL3_Image
+COPY deps/toolchain-mingw64.cmake /mingw/toolchain-mingw64.cmake
+RUN cd /mingw/src && \
+    git clone https://github.com/JuliaStrings/utf8proc.git && \
+    cd utf8proc && git checkout v2.11.3 && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_TOOLCHAIN_FILE=/mingw/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT .. && \
+    make -j $(nproc) && make install
+
 # Create Wine setup with OpenSSL and OpenJDK
 
 ENV WINEPREFIX=/wine \
