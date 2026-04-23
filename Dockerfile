@@ -7,7 +7,7 @@ RUN dnf -y update --refresh && \
     unzip sudo \
     wine mingw32-nsis mingw64-nsis \
     mingw64-gcc mingw64-zlib mingw64-gcc-c++ \
-    mingw64-zlib mingw64-gmp mingw64-openssl \
+    mingw64-zlib mingw64-zlib-static mingw64-gmp mingw64-openssl \
     mingw64-pcre2 mingw64-libffi \
     mingw64-SDL3.noarch mingw64-SDL3-static.noarch \
     mingw64-cairo.noarch mingw64-cairo-static.noarch \
