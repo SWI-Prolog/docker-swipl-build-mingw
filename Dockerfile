@@ -1,4 +1,4 @@
-FROM fedora:43
+FROM fedora:44
 LABEL maintainer="Jan Wielemaker <jan@swi-prolog.org>"
 
 RUN dnf -y update --refresh && \
