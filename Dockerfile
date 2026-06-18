@@ -63,90 +63,92 @@ COPY deps/libarchive-${ARCHIVE_VERSION}.tar.gz \
      deps/toolchain-mingw64.cmake \
      /tmp/deps/
 
-# All cross-compile steps in one RUN so source and build trees do not
-# leak into intermediate layers; each `make install' uses DESTDIR so
-# the resulting tree at /staging mirrors the eventual on-target layout
-# rooted at $MINGW64_ROOT (i.e. /staging/usr/x86_64-w64-mingw32/...).
-RUN set -eux; \
-    mkdir -p /tmp/src "$STAGING"; \
-    cd /tmp/src; \
-    \
-    # libyaml
-    git clone --depth 1 https://github.com/yaml/libyaml; \
-    ( cd libyaml; \
-      ./bootstrap; \
-      ./configure --host=$CROSS64 --prefix=$MINGW64_ROOT; \
-      make -j"$(nproc)"; \
-      make install DESTDIR=$STAGING; \
-    ); \
-    \
-    # libarchive
-    tar xzf /tmp/deps/libarchive-${ARCHIVE_VERSION}.tar.gz; \
-    ( cd libarchive-${ARCHIVE_VERSION}; \
-      export CFLAGS="-I$MINGW64_ROOT/include" LDFLAGS="-L$MINGW64_ROOT/lib"; \
-      export lt_cv_deplibs_check_method='pass_all'; \
-      export ac_cv_func__localtime64_s='no'; \
-      export ac_cv_func__ctime64_s='no'; \
+WORKDIR /tmp/src
+
+# Each library is built in its own RUN to keep failures isolated and
+# readable.  All RUNs install under $STAGING (either via DESTDIR or by
+# pointing the build's prefix at the staging-rooted on-target path).
+# The whole builder stage is discarded; layer count here is irrelevant
+# to the runtime image.
+
+RUN mkdir -p "$STAGING" && \
+    git clone --depth 1 https://github.com/yaml/libyaml && \
+    ( cd libyaml && \
+      ./bootstrap && \
+      ./configure --host=$CROSS64 --prefix=$MINGW64_ROOT && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf libyaml
+
+RUN tar xzf /tmp/deps/libarchive-${ARCHIVE_VERSION}.tar.gz && \
+    ( cd libarchive-${ARCHIVE_VERSION} && \
+      export CFLAGS="-I$MINGW64_ROOT/include" \
+             LDFLAGS="-L$MINGW64_ROOT/lib" \
+             lt_cv_deplibs_check_method='pass_all' \
+             ac_cv_func__localtime64_s='no' \
+             ac_cv_func__ctime64_s='no' && \
       ./configure --host=$CROSS64 --prefix=$MINGW64_ROOT --with-pic --with-zlib \
         --without-iconv --without-openssl --without-nettle --without-xml2 \
-        --without-expat --without-bz2lib --without-lzma --without-lzo2; \
-      make -j"$(nproc)"; \
-      make install DESTDIR=$STAGING; \
-    ); \
-    \
-    # uuid
-    tar xzf /tmp/deps/uuid-${UUID_VERSION}.tar.gz; \
-    ( cd uuid-${UUID_VERSION}; \
-      sed -i -e "s/-m 755 uuid /-m 755 uuid.exe /" Makefile.in; \
-      ac_cv_va_copy=1 ./configure --host=$CROSS64 --prefix=$MINGW64_ROOT; \
-      make -j"$(nproc)"; \
-      make install DESTDIR=$STAGING; \
-    ); \
-    \
-    # BerkeleyDB
-    tar xzf /tmp/deps/db-${BDB_VERSION}.tar.gz; \
-    ( cd db-${BDB_VERSION}/build_unix; \
-      sed -i -e "s:WinIoCtl.h:winioctl.h:" ../src/dbinc/win_db.h; \
+        --without-expat --without-bz2lib --without-lzma --without-lzo2 && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf libarchive-${ARCHIVE_VERSION}
+
+RUN tar xzf /tmp/deps/uuid-${UUID_VERSION}.tar.gz && \
+    ( cd uuid-${UUID_VERSION} && \
+      sed -i -e "s/-m 755 uuid /-m 755 uuid.exe /" Makefile.in && \
+      ac_cv_va_copy=1 ./configure --host=$CROSS64 --prefix=$MINGW64_ROOT && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf uuid-${UUID_VERSION}
+
+# BerkeleyDB does not honour DESTDIR in its install_lib / install_include
+# rules, so we configure with the staging-rooted prefix directly.  That
+# means the .la / .pc files inside the staging tree refer to a path that
+# starts with /staging/...; we sed those back to the on-target prefix
+# before the COPY out of the stage.
+RUN tar xzf /tmp/deps/db-${BDB_VERSION}.tar.gz && \
+    ( cd db-${BDB_VERSION}/build_unix && \
+      sed -i -e "s:WinIoCtl.h:winioctl.h:" ../src/dbinc/win_db.h && \
       sed -i -e 's@\(#include "dbinc/txn.h"\)@\1\nint __repmgr_get_nsites __P((ENV *, u_int32_t *));\n@' \
-        ../src/rep/rep_method.c; \
-      ../dist/configure --enable-mingw --host=$CROSS64 --prefix=$MINGW64_ROOT \
-        --enable-shared --disable-static; \
-      sed -i -e "s/^POSTLINK=.*/POSTLINK=true/" Makefile; \
-      make -j"$(nproc)" library_build; \
-      make install_lib install_include DESTDIR=$STAGING; \
-      cd $STAGING$MINGW64_ROOT/lib; \
-      [ -f libdb.dll.a ] || ln -s libdb-*.dll.a libdb.dll.a; \
-      [ -f libdb.la ] || ln -s libdb-*.la libdb.la; \
-    ); \
-    \
-    # SDL_image
-    git clone --recurse-submodules --shallow-submodules \
+        ../src/rep/rep_method.c && \
+      ../dist/configure --enable-mingw --host=$CROSS64 \
+        --prefix="$STAGING$MINGW64_ROOT" \
+        --enable-shared --disable-static && \
+      sed -i -e "s/^POSTLINK=.*/POSTLINK=true/" Makefile && \
+      make -j"$(nproc)" library_build && \
+      make install_lib install_include && \
+      cd "$STAGING$MINGW64_ROOT/lib" && \
+      ( [ -f libdb.dll.a ] || ln -s libdb-*.dll.a libdb.dll.a ) && \
+      ( [ -f libdb.la    ] || ln -s libdb-*.la    libdb.la    ) ) && \
+    rm -rf db-${BDB_VERSION} && \
+    find "$STAGING$MINGW64_ROOT/lib" -name 'libdb*.la' -print0 \
+      | xargs -0 -r sed -i "s|$STAGING$MINGW64_ROOT|$MINGW64_ROOT|g"
+
+RUN git clone --recurse-submodules --shallow-submodules \
       --depth 1 --branch release-${SDL_VERSION} \
-      https://github.com/libsdl-org/SDL_image.git; \
-    ( cd SDL_image; mkdir build; cd build; \
+      https://github.com/libsdl-org/SDL_image.git && \
+    ( cd SDL_image && mkdir build && cd build && \
       cmake -DCMAKE_TOOLCHAIN_FILE=/tmp/deps/toolchain-mingw64.cmake \
             -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT \
-            -DCMAKE_PREFIX_PATH=$MINGW64_ROOT ..; \
-      make -j"$(nproc)"; \
-      make install DESTDIR=$STAGING; \
-    ); \
-    \
-    # utf8proc
-    git clone --depth 1 --branch ${UTF8PROC_VERSION} \
-      https://github.com/JuliaStrings/utf8proc.git; \
-    ( cd utf8proc; mkdir build; cd build; \
+            -DCMAKE_PREFIX_PATH=$MINGW64_ROOT .. && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf SDL_image
+
+RUN git clone --depth 1 --branch ${UTF8PROC_VERSION} \
+      https://github.com/JuliaStrings/utf8proc.git && \
+    ( cd utf8proc && mkdir build && cd build && \
       cmake -DCMAKE_TOOLCHAIN_FILE=/tmp/deps/toolchain-mingw64.cmake \
             -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT \
-            -DBUILD_SHARED_LIBS=ON ..; \
-      make -j"$(nproc)"; \
-      make install DESTDIR=$STAGING; \
-    ); \
-    \
-    # Strip cross-built artifacts in place under the staging tree.
-    find "$STAGING$MINGW64_ROOT" \( -name '*.dll' -o -name '*.exe' \) \
-      -exec ${CROSS64}-strip --strip-unneeded {} + 2>/dev/null || true; \
-    \
-    rm -rf /tmp/src /tmp/deps
+            -DBUILD_SHARED_LIBS=ON .. && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf utf8proc
+
+# Strip cross-built artifacts under the staging tree.
+RUN find "$STAGING$MINGW64_ROOT" \( -name '*.dll' -o -name '*.exe' \) \
+      -exec ${CROSS64}-strip --strip-unneeded {} + 2>/dev/null || true
 
 ###############################################################################
 # Stage 2: runtime
