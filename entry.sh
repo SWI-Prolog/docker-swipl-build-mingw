@@ -1,7 +1,6 @@
 #!/bin/bash
 
 export SWIPL_SOURCE_DIR=/home/swipl/src/swipl-devel
-cd $SWIPL_SOURCE_DIR
 
 unset DISPLAY
 unset WAYLAND_DISPLAY
@@ -19,13 +18,31 @@ if [ ! -d "$WINEPREFIX/system.reg" ]; then
   wineboot -u
 fi
 
-if [ ! -f VERSION ]; then
-  echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
-  echo "and re-try"
-  exit 1
-fi
+# Clone the SWI-Prolog source tree into the container.  Used by the
+# GitHub Action so the build never touches the host filesystem and we
+# do not have to worry about UID/GID mapping or SELinux labels.
+clone_swipl() {
+  local url=$1 ref=$2
+
+  if [ -z "$url" ] || [ -z "$ref" ]; then
+    echo "--win64-from-git requires URL and REF arguments" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$SWIPL_SOURCE_DIR")"
+  rm -rf "$SWIPL_SOURCE_DIR"
+  git clone --recurse-submodules --shallow-submodules \
+            --branch "$ref" --depth 1 \
+            "$url" "$SWIPL_SOURCE_DIR"
+}
 
 if [ -z "$*" ]; then
+  if [ ! -f "$SWIPL_SOURCE_DIR/VERSION" ]; then
+    echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
+    echo "and re-try"
+    exit 1
+  fi
+  cd "$SWIPL_SOURCE_DIR"
   echo "Starting interactive shell for cross-compiling SWI-Prolog"
   echo "Commands:"
   echo ""
@@ -42,15 +59,23 @@ else
   while [ ! -z "$1" -a $done = false ]; do
     case "$1" in
       --win64)
+	  cd "$SWIPL_SOURCE_DIR"
 	  build_win64
 	  shift
 	  ;;
       --update)
+	  cd "$SWIPL_SOURCE_DIR"
 	  update_win64
 	  shift
 	  ;;
+      --win64-from-git)
+	  clone_swipl "$2" "$3"
+	  shift 3
+	  cd "$SWIPL_SOURCE_DIR"
+	  build_win64
+	  ;;
       *)
-	  echo "Options: --win64"
+	  echo "Options: --win64 | --update | --win64-from-git URL REF"
 	  exit 1
 	  done=true
     esac

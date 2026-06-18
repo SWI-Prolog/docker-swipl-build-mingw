@@ -1,9 +1,5 @@
 # Shell functions for common tasks
 
-# Running to many jobs concurrently under  wine   that  access  a lot of
-# files causes wineserver to generate  timeouts   which  shows  as files
-# claimed missing while they are not.
-
 jobs=$(($(nproc)/2))
 nopts="-j $jobs"
 
@@ -43,8 +39,7 @@ build_win64()
   mkdir $dir
   ( cd $dir
     config_win64 PGO
-    timeout -k 2m 1h ninja $nopts
-    timeout -k 2m 1h ninja $nopts
+    ninja $nopts
     cpack
   )
 }
@@ -56,8 +51,7 @@ update_win64()
   export JAVA_HOME="$JAVA_HOME64"
 
   ( cd $dir
-    timeout -k 1m 2m ninja $nopts
-    timeout -k 1m 2m ninja $nopts
+    ninja $nopts
   )
 }
 
