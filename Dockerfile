@@ -47,9 +47,8 @@ ENV MINGW64_ROOT=${MINGW64_ROOT} \
 
 RUN dnf -y install \
         gcc gcc-c++ make ninja-build cmake \
-        automake libtool autoconf gawk \
-        diffutils git patch tar gzip \
-        binutils-${CROSS64} \
+        automake libtool autoconf \
+        diffutils git patch \
         mingw64-gcc mingw64-gcc-c++ \
         mingw64-zlib mingw64-zlib-static mingw64-gmp \
         mingw64-openssl mingw64-pcre2 mingw64-libffi \
