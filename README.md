@@ -43,30 +43,11 @@ cross-compilation toolchain from Linux.  Usage:
 	make run
 ```
 
-  - The commands below create a fresh build.win32 (build.win64)
-    directory, configures, builds and packages SWI-Prolog for
-    Windows 32/64
+  - The commands below create a fresh build.win64 directory,
+    configures, builds and packages SWI-Prolog for Windows 64
 
 ```
-	build_win32
 	build_win64
-```
-
-  - For updating/debugging a build, go into one of the above
-    build directories and build using `ninja`.  Note that the
-    release build uses PGO optimization.  If you modified any
-    of the SWI-Prolog core sources you must either disable
-    PGO compilation using this command, after which you can
-    rebuild using `ninja`
-
-```
-	../scripts/pgo-compile.sh --off
-```
-
-    or build using PGO optimization using
-
-```
-	../scripts/pgo-compile.sh
 ```
 
 ## Issues
@@ -82,3 +63,11 @@ good balance between stability  and   providing  up-to-date  development
 tools. Notably the MinGW tool suite provides   a lot of the dependencies
 we need and, unlike  its  Ubuntu   (20.04)  equivalent,  PGO compilation
 works.
+
+## Automatic builds
+
+You can also download the image using
+
+```
+docker pull ghcr.io/swi-prolog/swipl-mingw-build:latest
+```
