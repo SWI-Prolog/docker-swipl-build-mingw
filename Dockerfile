@@ -107,11 +107,19 @@ RUN tar xzf /tmp/deps/uuid-${UUID_VERSION}.tar.gz && \
 # means the .la / .pc files inside the staging tree refer to a path that
 # starts with /staging/...; we sed those back to the on-target prefix
 # before the COPY out of the stage.
+#
+# GCC 14 turned -Wincompatible-pointer-types, -Wint-conversion and
+# -Wimplicit-function-declaration into errors by default; BDB 6.1.26
+# pre-dates that and uses K&R-style function pointer assignments that
+# trip the first.  Relax with -Wno-error=... for these three.
 RUN tar xzf /tmp/deps/db-${BDB_VERSION}.tar.gz && \
     ( cd db-${BDB_VERSION}/build_unix && \
       sed -i -e "s:WinIoCtl.h:winioctl.h:" ../src/dbinc/win_db.h && \
       sed -i -e 's@\(#include "dbinc/txn.h"\)@\1\nint __repmgr_get_nsites __P((ENV *, u_int32_t *));\n@' \
         ../src/rep/rep_method.c && \
+      CFLAGS="-Wno-error=incompatible-pointer-types \
+              -Wno-error=int-conversion \
+              -Wno-error=implicit-function-declaration" \
       ../dist/configure --enable-mingw --host=$CROSS64 \
         --prefix="$STAGING$MINGW64_ROOT" \
         --enable-shared --disable-static && \
