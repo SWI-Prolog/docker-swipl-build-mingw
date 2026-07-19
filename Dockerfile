@@ -185,7 +185,7 @@ RUN dnf -y update --refresh && \
         mingw64-SDL3.noarch mingw64-SDL3-static.noarch \
         mingw64-cairo.noarch mingw64-cairo-static.noarch \
         mingw64-pango.noarch mingw64-pango-static.noarch \
-        xorg-x11-server-Xvfb \
+        xorg-x11-server-Xvfb xdpyinfo \
         java-latest-openjdk-devel junit \
         procps \
         && dnf clean all && rm -rf /var/cache/dnf /var/log/dnf*
