@@ -51,7 +51,20 @@ update_win64()
   export JAVA_HOME="$JAVA_HOME64"
 
   ( cd $dir
-    ninja $nopts
+    ninja $nopts $*
+  )
+}
+
+ctest_win64()
+{ must_be_in_source_root || return 1
+
+  dir=build.win64
+  export JAVA_HOME="$JAVA_HOME64"
+
+  echo "ctest $*"
+
+  ( cd $dir
+    ctest $*
   )
 }
 

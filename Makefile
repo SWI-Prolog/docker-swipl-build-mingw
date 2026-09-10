@@ -17,12 +17,15 @@ all::
 	@echo "  runx11    As 'run', providing X11 graphics"
 	@echo "  win64     Build and package 64-bit version"
 	@echo "  update    Do incremental build of Win64 version"
+	@echo "  ctest     Run ctest"
 	@echo
+	@echo "update and ctest may be passed \"OPTIONS=<string\" to pass options for"
+	@echo "ninja or ctest"
 
 BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
 
 image:	Dockerfile
-#	docker pull fedora:43
+#	docker pull fedora:44
 	docker build $(BUILDARGS) -t $(IMG) . 2>&1 | tee mkimg.log
 
 run:
@@ -32,7 +35,10 @@ run11:
 	docker run $(IT) --rm $(MOUNT) $(MOUNTX11) -e DISPLAY=${DISPLAY} $(QIMG)
 
 update:
-	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --update
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --update ${OPTIONS}
+
+ctest:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --ctest ${OPTIONS}
 
 win64:
 	docker run $(IT) --rm $(MOUNT) $(SEC) $(QIMG) --win64

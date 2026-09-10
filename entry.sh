@@ -99,8 +99,14 @@ else
 	  ;;
       --update)
 	  cd "$SWIPL_SOURCE_DIR"
-	  update_win64
 	  shift
+	  update_win64 "$*"
+	  ;;
+      --ctest)
+	  cd "$SWIPL_SOURCE_DIR"
+	  shift
+	  echo ctest_win64 "$*"
+	  ctest_win64 "$*"
 	  ;;
       --win64-from-git)
 	  clone_swipl "$2" "$3"
@@ -109,7 +115,7 @@ else
 	  build_win64
 	  ;;
       *)
-	  echo "Options: --win64 | --update | --win64-from-git URL REF"
+	  echo "Options: --win64 | --update ... | --ctest ... | --win64-from-git URL REF"
 	  exit 1
 	  done=true
     esac
