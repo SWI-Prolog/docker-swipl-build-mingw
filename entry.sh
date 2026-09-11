@@ -23,10 +23,6 @@ export MINGW64_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw
 export WINE_JAVA_HOME64=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"*)
 export JAVA_HOME64=$(echo "$WINE_JAVA_HOME64" | sed 's/.*drive_c/c:/')
 
-if [ ! -d "$WINEPREFIX/system.reg" ]; then
-  wineboot -u
-fi
-
 # Start a virtual X server once for the lifetime of this entrypoint.
 # xpce's pceInitialise() (called when pl2xpce loads) creates Win32
 # windows which Wine routes to winex11.drv -> the X server.  With no
@@ -48,6 +44,16 @@ start_xvfb() {
     sleep 0.2
   done
   echo "Warning: Xvfb did not come up; xpce-based build steps may hang" >&2
+}
+
+# Wine decides once per server session which display driver it has, and
+# every process that attaches to that wineserver inherits the answer.  A
+# wine command run before the X server is up therefore leaves the whole
+# session without one, and SDL_CreateWindow() then fails for the rest of
+# the container's life -- even with SDL_VIDEODRIVER=dummy.  So this runs
+# after start_xvfb, and must stay there.
+boot_wine() {
+  wineboot -u
 }
 
 # Clone the SWI-Prolog source tree into the container.  Used by the
@@ -84,10 +90,12 @@ if [ -z "$*" ]; then
   echo ""
 
   start_xvfb
+  boot_wine
   /bin/bash --rcfile /functions.sh
 else
   source /functions.sh
   start_xvfb
+  boot_wine
 
   done=false
   while [ ! -z "$1" -a $done = false ]; do
