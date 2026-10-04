@@ -14,7 +14,7 @@ all::
 	@echo
 	@echo "  image     Build the docker image"
 	@echo "  run       Run a shell for building SWI-Prolog"
-	@echo "  runx11    As 'run', providing X11 graphics"
+	@echo "  run11     As 'run', providing X11 graphics"
 	@echo "  win64     Build and package 64-bit version"
 	@echo "  update    Do incremental build of Win64 version"
 	@echo "  ctest     Run ctest"
@@ -27,8 +27,8 @@ all::
 	@echo "  update-arm64  Do incremental build of ARM64 version"
 	@echo "  ctest-arm64   Run ctest on ARM64 version"
 	@echo
-	@echo "update and ctest may be passed \"OPTIONS=<string\" to pass options for"
-	@echo "ninja or ctest"
+	@echo "update, ctest and their -arm64 versions may be passed \"OPTIONS=<string>\" to"
+	@echo "pass options to ninja or ctest"
 
 BUILDARGS=--build-arg UID=$(UID) --build-arg GID=$(GID)
 
