@@ -1,0 +1,132 @@
+#!/bin/bash
+
+export SWIPL_SOURCE_DIR=/home/swipl/src/swipl-devel
+
+unset DISPLAY
+unset WAYLAND_DISPLAY
+# Disable Wayland but keep X11 enabled: xpce's pl2xpce calls into the
+# Win32 GDI on Wine, which needs a display driver to talk to.  We
+# provide an Xvfb-backed X server below (start_xvfb).
+export WINEDLLOVERRIDES="winwayland.drv=d"
+export WINEDEBUG=-all
+export WINEPREFIX=/wine
+# Let Wine find the MSYS2 and llvm-mingw runtime DLLs (libc++,
+# libwinpthread, cairo, SDL3, ...) when running build-time programs.
+export WINEPATH='Z:\clangarm64\bin;Z:\opt\llvm-mingw\aarch64-w64-mingw32\bin'
+
+# Suppress Mesa libEGL "DRI3 error: Could not get DRI3 device" noise.
+# Xvfb does not advertise DRI3; Mesa falls back to software rendering
+# regardless, but logs the failed probe at warning level.  Demoting to
+# fatal silences it without changing behaviour.
+export EGL_LOG_LEVEL=fatal
+
+export CTEST_OUTPUT_ON_FAILURE=y
+export CTEST_PARALLEL_LEVEL=16
+export WINE_JAVA_HOME=$(echo "$WINEPREFIX/drive_c/Program Files/Java/jdk"*)
+export JAVA_HOME_WIN=$(echo "$WINE_JAVA_HOME" | sed 's/.*drive_c/c:/')
+
+# Start a virtual X server once for the lifetime of this entrypoint.
+# xpce's pceInitialise() (called when pl2xpce loads) creates Win32
+# windows which Wine routes to winex11.drv -> the X server.  With no
+# display the call deadlocks in user-mode futex waits.  Xvfb gives it
+# a real X target so the call returns instantly.
+start_xvfb() {
+  if [ -n "$DISPLAY" ]; then
+    return 0
+  fi
+  Xvfb :99 -screen 0 1024x768x24 -nolisten tcp >/dev/null 2>&1 &
+  XVFB_PID=$!
+  export DISPLAY=:99
+  trap 'kill $XVFB_PID 2>/dev/null' EXIT
+  # Wait briefly for the server to accept connections.
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    if xdpyinfo -display "$DISPLAY" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.2
+  done
+  echo "Warning: Xvfb did not come up; xpce-based build steps may hang" >&2
+}
+
+# Wine decides once per server session which display driver it has, and
+# every process that attaches to that wineserver inherits the answer.  A
+# wine command run before the X server is up therefore leaves the whole
+# session without one, and SDL_CreateWindow() then fails for the rest of
+# the container's life -- even with SDL_VIDEODRIVER=dummy.  So this runs
+# after start_xvfb, and must stay there.
+boot_wine() {
+  wineboot -u
+}
+
+# Clone the SWI-Prolog source tree into the container.  Used by the
+# GitHub Action so the build never touches the host filesystem and we
+# do not have to worry about UID/GID mapping or SELinux labels.
+clone_swipl() {
+  local url=$1 ref=$2
+
+  if [ -z "$url" ] || [ -z "$ref" ]; then
+    echo "--winarm64-from-git requires URL and REF arguments" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$SWIPL_SOURCE_DIR")"
+  rm -rf "$SWIPL_SOURCE_DIR"
+  git clone --recurse-submodules --shallow-submodules \
+            --branch "$ref" --depth 1 \
+            "$url" "$SWIPL_SOURCE_DIR"
+}
+
+if [ -z "$*" ]; then
+  if [ ! -f "$SWIPL_SOURCE_DIR/VERSION" ]; then
+    echo "Can not find SWI-Prolog source.  Please edit SWIPLSRC in Makefile"
+    echo "and re-try"
+    exit 1
+  fi
+  cd "$SWIPL_SOURCE_DIR"
+  echo "Starting interactive shell for cross-compiling SWI-Prolog (Windows ARM64)"
+  echo "Commands:"
+  echo ""
+  echo "  build_winarm64  -- build ARM64 version in build.winarm64"
+  echo ""
+  echo "  winarm64        -- Setup for ARM64 and enter build.winarm64"
+  echo ""
+
+  start_xvfb
+  boot_wine
+  /bin/bash --rcfile /functions.sh
+else
+  source /functions.sh
+  start_xvfb
+  boot_wine
+
+  done=false
+  while [ ! -z "$1" -a $done = false ]; do
+    case "$1" in
+      --winarm64)
+	  cd "$SWIPL_SOURCE_DIR"
+	  build_winarm64
+	  shift
+	  ;;
+      --update)
+	  cd "$SWIPL_SOURCE_DIR"
+	  shift
+	  update_winarm64 "$*"
+	  ;;
+      --ctest)
+	  cd "$SWIPL_SOURCE_DIR"
+	  shift
+	  ctest_winarm64 "$*"
+	  ;;
+      --winarm64-from-git)
+	  clone_swipl "$2" "$3"
+	  shift 3
+	  cd "$SWIPL_SOURCE_DIR"
+	  build_winarm64
+	  ;;
+      *)
+	  echo "Options: --winarm64 | --update ... | --ctest ... | --winarm64-from-git URL REF"
+	  exit 1
+	  done=true
+    esac
+  done
+fi

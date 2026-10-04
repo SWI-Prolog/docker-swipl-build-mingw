@@ -45,3 +45,25 @@ win64:
 
 win:
 	docker run $(IT) --rm $(MOUNT) $(QIMG) --win64
+
+################################################################
+# Windows on ARM64.  Needs an aarch64 Linux docker host with 4K pages
+# (e.g., colima on Apple Silicon; not Asahi Linux, whose 16K pages break
+# Wine).
+
+IMG_ARM64=swipl-mingw-arm64
+
+image-arm64:	arm64/Dockerfile arm64/entry.sh arm64/functions.sh arm64/pacman.conf
+	docker build $(BUILDARGS) -f arm64/Dockerfile -t $(IMG_ARM64) . 2>&1 | tee mkimg-arm64.log
+
+run-arm64:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(IMG_ARM64)
+
+winarm64:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(IMG_ARM64) --winarm64
+
+update-arm64:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(IMG_ARM64) --update ${OPTIONS}
+
+ctest-arm64:
+	docker run $(IT) --rm $(MOUNT) $(SEC) $(IMG_ARM64) --ctest ${OPTIONS}
