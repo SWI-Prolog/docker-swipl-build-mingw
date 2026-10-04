@@ -19,6 +19,14 @@ all::
 	@echo "  update    Do incremental build of Win64 version"
 	@echo "  ctest     Run ctest"
 	@echo
+	@echo "Windows on ARM64 (needs an aarch64 Linux docker host, e.g. colima):"
+	@echo
+	@echo "  image-arm64   Build the ARM64 docker image"
+	@echo "  run-arm64     Run a shell for building SWI-Prolog for ARM64"
+	@echo "  winarm64      Build and package ARM64 version"
+	@echo "  update-arm64  Do incremental build of ARM64 version"
+	@echo "  ctest-arm64   Run ctest on ARM64 version"
+	@echo
 	@echo "update and ctest may be passed \"OPTIONS=<string\" to pass options for"
 	@echo "ninja or ctest"
 
