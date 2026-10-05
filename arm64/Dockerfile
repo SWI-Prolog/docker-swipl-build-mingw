@@ -177,9 +177,12 @@ RUN dnf -y install gcc && dnf clean all && rm -rf /var/cache/dnf /var/log/dnf*
 
 # Use llvm-mingw's runtime DLLs rather than MSYS2's: our code is compiled
 # with llvm-mingw's clang and headers, and swipl's CMake ships the DLLs
-# from $MINGW_ROOT/bin.  libc++ keeps a stable ABI, so the MSYS2
-# libraries built against an older libc++ work with the newer one.
-RUN for dll in libc++.dll libunwind.dll libwinpthread-1.dll; do \
+# from $MINGW_ROOT/bin.  Keep MSYS2's libc++.dll though: it also exports
+# the unwinder (_Unwind_Resume, ...), which MSYS2 libraries such as cairo
+# and graphite2 import from it.  llvm-mingw's libc++.dll does not, which
+# Wine tolerates but Windows refuses to load.  MSYS2's libc++ is at least
+# as new as llvm-mingw's, so it provides everything our code imports.
+RUN for dll in libunwind.dll libwinpthread-1.dll; do \
       cp /opt/llvm-mingw/${CROSS}/bin/$dll ${MINGW_ROOT}/bin/$dll; \
     done
 
