@@ -153,6 +153,7 @@ RUN set -eux; \
         mingw-w64-clang-aarch64-libffi \
         mingw-w64-clang-aarch64-sdl3 \
         mingw-w64-clang-aarch64-sdl3-image \
+        mingw-w64-clang-aarch64-sdl3-sound \
         mingw-w64-clang-aarch64-cairo \
         mingw-w64-clang-aarch64-pango \
         mingw-w64-clang-aarch64-libyaml \

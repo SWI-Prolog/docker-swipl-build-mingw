@@ -2,8 +2,8 @@
 #
 # Multi-stage build for the SWI-Prolog Windows cross-compile image.
 #
-# Stage 1 (builder) builds libyaml, libarchive, uuid, libdb, SDL_image
-# and utf8proc into /staging using DESTDIR so the install tree can be
+# Stage 1 (builder) builds libyaml, libarchive, uuid, libdb, SDL_image,
+# SDL_sound and utf8proc into /staging using DESTDIR so the install tree can be
 # COPYed wholesale into the runtime stage with all sources, build trees
 # and build-only tools (autoconf/automake/libtool/...) left behind.
 #
@@ -18,6 +18,7 @@ ARG ARCHIVE_VERSION=3.8.5
 ARG UUID_VERSION=1.6.2
 ARG BDB_VERSION=6.1.26
 ARG SDL_VERSION=3.4.0
+ARG SDL_SOUND_VERSION=3.2.0
 ARG UTF8PROC_VERSION=v2.11.3
 
 # renovate: datasource=github-tags depName=python/cpython versioning=pep440
@@ -38,6 +39,7 @@ ARG ARCHIVE_VERSION
 ARG UUID_VERSION
 ARG BDB_VERSION
 ARG SDL_VERSION
+ARG SDL_SOUND_VERSION
 ARG UTF8PROC_VERSION
 
 ENV MINGW64_ROOT=${MINGW64_ROOT} \
@@ -143,6 +145,21 @@ RUN git clone --recurse-submodules --shallow-submodules \
       make -j"$(nproc)" && \
       make install DESTDIR=$STAGING ) && \
     rm -rf SDL_image
+
+# SDL3_sound bundles its decoders (dr_mp3, dr_flac, stb_vorbis, ...),
+# so it needs no further dependencies.
+RUN git clone --depth 1 --branch v${SDL_SOUND_VERSION} \
+      https://github.com/icculus/SDL_sound.git && \
+    ( cd SDL_sound && mkdir build && cd build && \
+      cmake -DCMAKE_TOOLCHAIN_FILE=/tmp/deps/toolchain-mingw64.cmake \
+            -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT \
+            -DCMAKE_PREFIX_PATH=$MINGW64_ROOT \
+            -DSDLSOUND_BUILD_STATIC=OFF \
+            -DSDLSOUND_BUILD_TEST=OFF \
+            -DSDLSOUND_BUILD_DOCS=OFF .. && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf SDL_sound
 
 RUN git clone --depth 1 --branch ${UTF8PROC_VERSION} \
       https://github.com/JuliaStrings/utf8proc.git && \
