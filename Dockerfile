@@ -3,7 +3,8 @@
 # Multi-stage build for the SWI-Prolog Windows cross-compile image.
 #
 # Stage 1 (builder) builds libyaml, libarchive, uuid, libdb, SDL_image,
-# SDL_sound and utf8proc into /staging using DESTDIR so the install tree can be
+# SDL_sound, utf8proc, ffmpeg and optionally libsrt into /staging using
+# DESTDIR so the install tree can be
 # COPYed wholesale into the runtime stage with all sources, build trees
 # and build-only tools (autoconf/automake/libtool/...) left behind.
 #
@@ -20,6 +21,10 @@ ARG BDB_VERSION=6.1.26
 ARG SDL_VERSION=3.4.0
 ARG SDL_SOUND_VERSION=3.2.0
 ARG UTF8PROC_VERSION=v2.11.3
+ARG FFMPEG_VERSION=8.1.3
+ARG SRT_VERSION=1.5.7
+# --build-arg WITH_SRT=0 excludes SRT (srt://) from ffmpeg
+ARG WITH_SRT=1
 
 # renovate: datasource=github-tags depName=python/cpython versioning=pep440
 ARG PYTHON_VERSION=3.14.3
@@ -41,6 +46,9 @@ ARG BDB_VERSION
 ARG SDL_VERSION
 ARG SDL_SOUND_VERSION
 ARG UTF8PROC_VERSION
+ARG FFMPEG_VERSION
+ARG SRT_VERSION
+ARG WITH_SRT
 
 ENV MINGW64_ROOT=${MINGW64_ROOT} \
     CROSS64=${CROSS64} \
@@ -170,6 +178,60 @@ RUN git clone --depth 1 --branch ${UTF8PROC_VERSION} \
       make -j"$(nproc)" && \
       make install DESTDIR=$STAGING ) && \
     rm -rf utf8proc
+
+# ffmpeg is used by xpce if SWI-Prolog is configured with
+# -DXPCE_VIDEO=ffmpeg; by default xpce uses Media Foundation.  This is a
+# small LGPL build: only libavformat, libavcodec, libavutil and
+# libswresample (for the Opus decoder) with the common containers and
+# network protocols.  ffmpeg's MPEG-4 encoder is the fallback if Media
+# Foundation cannot encode, e.g., on a Windows N edition.  H.264, HEVC and AAC are
+# encoded by Media Foundation (h264_mf, ...), TLS is Schannel and D3D11VA
+# decodes on the GPU.  It needs nasm.  libsrt is installed into the
+# mingw root as well, so ffmpeg's configure finds it.
+RUN dnf -y install nasm && dnf clean all && rm -rf /var/cache/dnf
+
+RUN if [ "$WITH_SRT" = 1 ]; then \
+      curl -sSfL https://github.com/Haivision/srt/archive/refs/tags/v${SRT_VERSION}.tar.gz \
+        | tar xz && \
+      ( cd srt-${SRT_VERSION} && mkdir build && cd build && \
+        cmake -DCMAKE_TOOLCHAIN_FILE=/tmp/deps/toolchain-mingw64.cmake \
+              -DCMAKE_INSTALL_PREFIX=$MINGW64_ROOT \
+              -DCMAKE_PREFIX_PATH=$MINGW64_ROOT \
+              -DENABLE_APPS=OFF -DENABLE_STATIC=OFF -DENABLE_SHARED=ON \
+              -DENABLE_STDCXX_SYNC=ON -DUSE_ENCLIB=openssl .. && \
+        make -j"$(nproc)" && \
+        make install && \
+        make install DESTDIR=$STAGING ) && \
+      rm -rf srt-${SRT_VERSION}; \
+    fi
+
+RUN curl -sSfL https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz \
+      | tar xJ && \
+    ( cd ffmpeg-${FFMPEG_VERSION} && \
+      if [ "$WITH_SRT" = 1 ]; then \
+        SRT="--enable-libsrt --enable-protocol=libsrt"; \
+      fi && \
+      ./configure --prefix=$MINGW64_ROOT \
+        --enable-cross-compile --target-os=mingw32 --arch=x86_64 \
+        --cross-prefix=${CROSS64}- --pkg-config=${CROSS64}-pkg-config \
+        --disable-everything --disable-programs --disable-doc \
+        --disable-avdevice --disable-avfilter --disable-swscale \
+        --enable-shared --disable-static \
+        --disable-gpl --disable-nonfree --disable-autodetect \
+        --enable-network --enable-zlib --enable-schannel \
+        --enable-mediafoundation --enable-d3d11va \
+        --enable-protocol=file,pipe,http,https,tcp,udp,rtp,rtmp,rtmps,tls,crypto,data,srtp \
+        --enable-demuxer=mov,matroska,mpegts,hls,rtsp,flv,sdp,rtp,aac,mp3,wav,mjpeg \
+        --enable-muxer=mp4,mov,ipod,matroska,webm,mpegts,flv,hls,rtp,rtp_mpegts,adts \
+        --enable-parser=h264,hevc,aac,av1,vp9,opus,mpegaudio,mjpeg,mpeg4video \
+        --enable-bsf=h264_mp4toannexb,hevc_mp4toannexb,aac_adtstoasc,extract_extradata,vp9_superframe,av1_frame_merge \
+        --enable-decoder=aac,mp3,opus,vp9,mjpeg,mpeg4,h264,hevc \
+        --enable-hwaccel=h264_d3d11va,h264_d3d11va2,hevc_d3d11va,hevc_d3d11va2 \
+        --enable-encoder=aac,mpeg4,h264_mf,hevc_mf,aac_mf \
+        $SRT && \
+      make -j"$(nproc)" && \
+      make install DESTDIR=$STAGING ) && \
+    rm -rf ffmpeg-${FFMPEG_VERSION}
 
 # Strip cross-built artifacts under the staging tree.
 RUN find "$STAGING$MINGW64_ROOT" \( -name '*.dll' -o -name '*.exe' \) \
